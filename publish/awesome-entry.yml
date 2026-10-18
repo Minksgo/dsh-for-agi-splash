@@ -1,0 +1,6 @@
+url: https://github.com/<owner>/dsh-for-agi-splash
+name: <owner>/dsh-for-agi-splash
+category: ui
+description:
+  en: 'A 9.9-second cold-start title sequence for DeepSeek Harness: five acts trace the real boot chain — plugins load, the runtime connects, tools register, context assembles, the agent comes online — with a Chinese voice-over and a synthesized soundtrack, then hands off to the UI. Click anywhere or press Esc to skip, and its page in Settings controls the switch, volume, skip hint and replay.'
+  zh: 给 DSH 加一段约 10 秒的冷启动片头：五幕依次走完真实启动链（插件装载、运行时连接、工具接入、上下文装配、智能体就位），配中文旁白与逐样本合成的音效，播完交棒主界面。点击或 Esc 随时跳过，设置里的「开屏动画」可开关、调音量、改跳过提示语并当场重播。
