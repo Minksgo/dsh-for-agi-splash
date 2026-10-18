@@ -29,19 +29,35 @@ npx @deepseek-ai/dsh plugin --profile desktop add dsh-for-agi-splash
 npx @deepseek-ai/dsh plugin --profile desktop add github:<你的账号>/DSH-for-AGI开屏动画
 ```
 
-装完**重启客户端**生效。片头只播一次，播完自动淡出。
+装完**重启客户端**生效。片头只播一次，播完自动淡出；之后去 **设置 → 开屏动画** 就能开关、调音量、改提示语、重播。
+
+## 设置 → 开屏动画
+
+装好重启后，**设置 → 开屏动画** 里多一页，四行：
+
+| 行 | 作用 |
+| --- | --- |
+| 启用开屏动画 | 总开关。关掉后连首帧底色都不画，启动直通界面 |
+| 音量 | 0–100%，默认 90%；旁白与音效同一条总线 |
+| 跳过提示语 | 画面底部那行字，默认 `点击任意处跳过 · ESC`；留空则不显示 |
+| 重新播放 | 当场重播一遍片头；播放中显示「播放中…」并禁用。旁边「独立预览」打开 `/dsh-for-agi-splash/preview` |
+
+配置存在渲染进程的 localStorage（前缀 `dsh-for-agi-splash:`：`enabled` / `volume` / `hint`），
+**只在本机生效，换机器不跟随**，也不会写进 profile。
 
 ## 关掉它
 
-三种方式，任选：
+四种方式，任选：
 
 | 方式 | 作用范围 | 做法 |
 | --- | --- | --- |
+| 设置开关 | 永久（本机） | 设置 → 开屏动画 → 关掉「启用开屏动画」 |
 | URL 参数 | 本次会话 | 地址后加 `?agi=0` |
-| localStorage | 永久（本机） | 控制台执行 `localStorage.setItem('dsh-for-agi-splash:off','1')` |
+| localStorage | 永久（本机） | 控制台执行 `localStorage.setItem('dsh-for-agi-splash:enabled','0')` |
 | 插件开关 | 永久 | 设置 → 插件，关掉本插件 |
 
-想恢复：把键删掉（`localStorage.removeItem('dsh-for-agi-splash:off')`）或重新打开插件。
+旧版留下的 `dsh-for-agi-splash:off` 仍然认：`1` 等价于关掉。
+想恢复：打开开关，或删掉对应的键。
 
 ## 再看一遍 / 换掉画面
 
@@ -73,6 +89,8 @@ DSH 的启动壳会在客户端插件加载前先画一张 `HARNESS / Loading pl
 - DSH `>= 0.2.0-rc.1`（Web 与 Desktop 两种载体都走 `webserver/index-inject`）
 - 首帧底色在桌面端的 Electron 与浏览器里都验证过；`prefers-reduced-motion` 下会静音并缩短到约 1.2 秒
 - 无外部依赖，无网络请求（音频以 data URI 内联在客户端 bundle 里）
+- 设置页通过 `ctx.slots.register` 注册自己的 `settings.section`（id `agi-splash`，order 40），
+  不写官方 General 页的 slot；宿主没提供 React 时只少一页设置，片头照播
 
 ## 许可
 

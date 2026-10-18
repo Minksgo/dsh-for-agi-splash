@@ -77,7 +77,7 @@ const playBoot = [
   "\t\t\tconst au = q('#agiAudio');",
   '\t\t\tif (au !== null) {',
   '\t\t\t\tau.src = AUDIO_MP3;',
-  '\t\t\t\tau.volume = 0.9;',
+  '\t\t\t\tau.volume = (typeof globalThis.__agiSplashVolume === "function") ? globalThis.__agiSplashVolume() : 0.9;',
   '\t\t\t\tconst kick = () => {',
   '\t\t\t\t\ttry {',
   '\t\t\t\t\t\tconst played = au.play();',
