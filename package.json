@@ -1,7 +1,7 @@
 {
   "name": "dsh-for-agi-splash",
-  "version": "0.2.0",
-  "description": "DSH-for-AGI 开屏动画：9.9 秒冷启动片头，五幕走完 DSH 真实启动链（插件装载 → 运行时连接 → 工具接入 → 上下文装配 → 智能体就位），中文旁白 + 全片音效，点击或 Esc 随时跳过。",
+  "version": "0.3.0",
+  "description": "DSH-for-AGI 开屏动画：9.9 秒精简版 + 30 秒剧场版。剧场版走完冷启动 → 自检 → 认知网络 → 工具桥接 → 上下文装配 → AGI 就位 → 交棒，装完或升级后播一次，之后自动回精简版；中文旁白 + 全片音效，点击或 Esc 随时跳过。",
   "type": "module",
   "main": "./lib/index.js",
   "exports": {
@@ -94,8 +94,8 @@
     "capability": {
       "id": "agi-splash",
       "kind": "ui",
-      "invocation": "Restart the profile's Web GUI (or open /dsh-for-agi-splash/preview in the same app), then read the first frame: document.querySelector('.agi-splash-host') and its shadowRoot's #boot <svg id=\"agiScene\">, plus document.documentElement.classList.contains('agi-first') during boot. For the settings page open 设置 and look for the \"开屏动画\" section (four rows: 启用开屏动画 / 音量 / 跳过提示语 / 重新播放).",
-      "expected": "The index-injected cover paints before the shell's [data-dsh-boot] card, the client bundle mounts the same shadow root on the following task, the 9.9 s scene plays once with narration, then the overlay fades out and is removed. The settings section registers as settings.section#agi-splash@40 and its switch/slider/text/replay controls round-trip through localStorage 'dsh-for-agi-splash:*'."
+      "invocation": "Restart the profile's Web GUI (or open /dsh-for-agi-splash/preview or /dsh-for-agi-splash/preview/30 in the same app), then read the first frame: document.querySelector('.agi-splash-host') and its shadowRoot, where #cutLong or #cutShort carries class 'on', plus document.documentElement.classList.contains('agi-first') during boot. For the settings page open 设置 and look for the \"开屏动画\" section (启用开屏动画 / 播放模式 / 音量 / 跳过提示语 / 独立预览 / 重新播放).",
+      "expected": "The index-injected cover paints before the shell's [data-dsh-boot] card, the client bundle mounts the same shadow root on the following task, then either the 9.9 s or the 30 s scene plays once with narration and the overlay fades out and is removed. On a fresh localStorage the auto mode picks the 30 s theatrical cut once and records dsh-for-agi-splash:version, after which it picks the 9.9 s cut; mode long/short pins a cut. The settings section registers as settings.section#agi-splash@40 and its switch/mode/volume/text/preview/replay controls round-trip through localStorage 'dsh-for-agi-splash:*'."
     },
     "evidence": {
       "install": null,

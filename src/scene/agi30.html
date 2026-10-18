@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<style>
+  html,body{margin:0;height:100%;background:#000407;overflow:hidden}
+  #stage{position:fixed;inset:0;width:100vw;height:100vh;display:block}
+  text{font-family:"PingFang SC","SF Mono",Menlo,monospace}
+  .mono{letter-spacing:.18em}
+</style></head>
+<body>
+<svg id="stage" viewBox="0 0 1280 720" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <pattern id="grid" width="80" height="80" patternUnits="userSpaceOnUse">
+      <path d="M80 0H0V80" fill="none" stroke="#13414c" stroke-width="1" opacity=".55"/>
+    </pattern>
+    <pattern id="fine" width="16" height="16" patternUnits="userSpaceOnUse">
+      <path d="M16 0H0V16" fill="none" stroke="#0d3038" stroke-width="1" opacity=".5"/>
+    </pattern>
+    <pattern id="scan" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="1" fill="#8fe9ff" opacity=".06"/>
+    </pattern>
+    <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#e8feff" stop-opacity="1"/>
+      <stop offset="25%" stop-color="#59dcf2" stop-opacity=".5"/>
+      <stop offset="100%" stop-color="#59dcf2" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="haze" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#2ea7bd" stop-opacity=".20"/>
+      <stop offset="100%" stop-color="#2ea7bd" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="vignette" cx="50%" cy="50%" r="62%">
+      <stop offset="55%" stop-color="#000407" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000407" stop-opacity=".88"/>
+    </radialGradient>
+    <linearGradient id="streak" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#9deeff" stop-opacity="0"/>
+      <stop offset="45%" stop-color="#d9feff" stop-opacity=".9"/>
+      <stop offset="100%" stop-color="#9deeff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="scanTrail" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8fe9ff" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#bff6ff" stop-opacity=".22"/>
+    </linearGradient>
+    <linearGradient id="vstreak" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d9feff" stop-opacity="0"/>
+      <stop offset="48%" stop-color="#d9feff" stop-opacity=".55"/>
+      <stop offset="52%" stop-color="#d9feff" stop-opacity=".55"/>
+      <stop offset="100%" stop-color="#d9feff" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="glow4"><feGaussianBlur stdDeviation="4"/></filter>
+    <filter id="glow10"><feGaussianBlur stdDeviation="10"/></filter>
+    <filter id="glow24"><feGaussianBlur stdDeviation="24"/></filter>
+  </defs>
+
+  <rect width="1280" height="720" fill="#000407"/>
+  <g id="world">
+    <rect id="gridFine" width="1280" height="720" fill="url(#fine)" opacity="0"/>
+    <rect id="gridBg" width="1280" height="720" fill="url(#grid)" opacity="0"/>
+    <circle id="hazeC" cx="640" cy="360" r="430" fill="url(#haze)" opacity="0"/>
+    <rect width="1280" height="720" fill="url(#scan)" opacity=".45"/>
+    <g id="dust" opacity="0"></g>
+    <g id="brackets" opacity="0"></g>
+
+    <circle id="seedGlow" cx="640" cy="360" r="120" fill="url(#coreGlow)" opacity="0"/>
+    <circle id="seed" cx="640" cy="360" r="3" fill="#f0ffff" opacity="0"/>
+
+    <g id="ringScan" opacity="0">
+      <circle id="scanArc" cx="640" cy="360" r="150" fill="none" stroke="#7fe8ff" stroke-width="1.6"/>
+      <circle id="scanArc2" cx="640" cy="360" r="196" fill="none" stroke="#3f9fb0" stroke-width="1" opacity=".5"/>
+      <rect id="scanBar" x="430" y="359" width="420" height="2" fill="#bff6ff" opacity="0"/>
+      <rect id="scanBarTrail" x="430" y="337" width="420" height="22" fill="url(#scanTrail)" opacity="0"/>
+    </g>
+
+    <g id="selfTest" opacity="0"></g>
+
+    <g id="plugPanel" opacity="0"></g>
+
+    <g id="lattice" opacity="0"></g>
+    <g id="sphere" opacity="0"></g>
+    <g id="seam" opacity="0">
+      <line id="seamLine" x1="640" y1="160" x2="640" y2="560" stroke="#d9feff" stroke-width="2"/>
+      <rect id="seamGlow" x="632" y="160" width="16" height="400" fill="url(#coreGlow)" opacity=".35"/>
+    </g>
+    <g id="toolTraces" opacity="0"></g>
+    <g id="toolPanel" opacity="0"></g>
+
+    <g id="ctx" opacity="0">
+      <circle id="ctxRing1" cx="640" cy="360" r="250" fill="none" stroke="#7fe8ff" stroke-width="1.4"/>
+      <circle id="ctxRing2" cx="640" cy="360" r="292" fill="none" stroke="#3f9fb0" stroke-width="1"/>
+      <circle id="ctxRing3" cx="640" cy="360" r="336" fill="none" stroke="#2b7d8c" stroke-width="1"/>
+      <g id="sparks"></g>
+    </g>
+
+    <g id="wordmark" opacity="0">
+      <g id="wmRed" filter="url(#glow4)"></g>
+      <g id="wmCyan" filter="url(#glow4)"></g>
+      <g id="wmWhite"></g>
+    </g>
+    <rect id="streakBar" x="-600" y="353" width="600" height="8" fill="url(#streak)" opacity="0" style="mix-blend-mode:screen"/>
+    <circle id="shock" cx="640" cy="360" r="0" fill="none" stroke="#d9feff" stroke-width="2" opacity="0"/>
+    <rect id="gateLine" x="640" y="359" width="0" height="2" fill="#d9feff" opacity="0"/>
+    <rect id="blackout" width="1280" height="720" fill="#000407" opacity="0"/>
+    <rect id="flash" width="1280" height="720" fill="#eaffff" opacity="0"/>
+    <rect width="1280" height="720" fill="url(#vignette)" opacity=".55"/>
+  </g>
+
+  <g id="hud" opacity="0">
+    <line x1="96" y1="96" x2="1184" y2="96" stroke="#2b7d8c" stroke-width="1" opacity=".45"/>
+    <text x="104" y="58" fill="#8fe4f5" font-size="15" font-weight="600" class="mono">AGI</text>
+    <text x="152" y="58" fill="#4f9aa8" font-size="12" class="mono">通用人工智能 · 启动序列</text>
+    <text x="1176" y="58" fill="#4d8e9c" font-size="12" text-anchor="end" class="mono" id="clock">T+00:00:00</text>
+    <text x="1176" y="80" fill="#2f6d79" font-size="11" text-anchor="end" class="mono" id="spec">DSH 内核 0.2.0-rc.2 · 插件 28 · MIT</text>
+    <line x1="96" y1="700" x2="1184" y2="700" stroke="#2b7d8c" stroke-width="1" opacity=".45"/>
+    <text id="actLabel" x="104" y="676" fill="#4f9aa8" font-size="11" class="mono"></text>
+    <g id="status"></g>
+    <g id="spectrum"></g>
+    <rect id="bar" x="0" y="712" width="0" height="2" fill="#7fe8ff" opacity="0"/>
+  </g>
+</svg>
+
+<script>
+(function(){
+  const NS='http://www.w3.org/2000/svg';
+  const $=(s)=>document.querySelector(s);
+  const el=(n,attrs)=>{const e=document.createElementNS(NS,n);for(const k in attrs)e.setAttribute(k,attrs[k]);return e;};
+  const CX=640, CY=360, R=196;
+  const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+  const ramp=(t,a,b)=>clamp((t-a)/(b-a),0,1);
+  const easeOut=(x)=>1-Math.pow(1-x,3);
+  const easeIO=(x)=>x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2;
+  const easeBack=(x)=>{const c=1.70158;return 1+ (c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2);};
+
+  // ---------- corner brackets ----------
+  const bg=$('#brackets');
+  const M=96, L=34;
+  [[M,M,1,1],[1280-M,M,-1,1],[M,720-M,1,-1],[1280-M,720-M,-1,-1]].forEach(([x,y,sx,sy])=>{
+    bg.appendChild(el('path',{d:'M'+x+' '+(y+L*sy)+' L'+x+' '+y+' L'+(x+L*sx)+' '+y,
+      fill:'none',stroke:'#5fd0e2','stroke-width':'1.6',opacity:'.6'}));
+  });
+
+  // ---------- dust ----------
+  const dust=$('#dust');
+  const dustEls=[];
+  for(let i=0;i<90;i++){
+    const c=el('circle',{cx:0,cy:0,r:(i%6===0?1.6:0.9),fill:'#9ceeff',opacity:'0'});
+    dust.appendChild(c);
+    dustEls.push({c,x:((i*197)%1240)+20,y0:(i*311)%720,sp:5+(i%7)*3,ph:i*0.7});
+  }
+
+  // ---------- cognitive lattice ----------
+  const latG=$('#lattice');
+  const latEdges=[], latNodes=[];
+  const RINGS=[{r:70,n:6,rot:-Math.PI/2},{r:140,n:12,rot:-Math.PI/2},{r:210,n:18,rot:-Math.PI/2}];
+  const ringPts=RINGS.map((R0)=>{const pts=[];for(let i=0;i<R0.n;i++){const a=R0.rot+i*2*Math.PI/R0.n;
+    pts.push({x:CX+Math.cos(a)*R0.r,y:CY+Math.sin(a)*R0.r*0.62});}return pts;});
+  ringPts.forEach((pts,ri)=>{ pts.forEach((p,i)=>{ const q=pts[(i+1)%pts.length];
+    const l=el('line',{x1:p.x,y1:p.y,x2:q.x,y2:q.y,stroke:'#57cfe3','stroke-width':'1','opacity':'.5'});
+    latG.appendChild(l); latEdges.push({e:l,t0:7.7+ri*0.3+i*0.008}); }); });
+  for(let ri=0;ri<2;ri++){
+    ringPts[ri].forEach((p,i)=>{
+      const tgt=ringPts[ri+1][Math.round(i*(ringPts[ri+1].length/ringPts[ri].length))%ringPts[ri+1].length];
+      const l=el('line',{x1:p.x,y1:p.y,x2:tgt.x,y2:tgt.y,stroke:'#3f9fb0','stroke-width':'1','opacity':'.3'});
+      latG.appendChild(l); latEdges.push({e:l,t0:8.1+ri*0.3+i*0.012});
+    });
+  }
+  const coreNode=el('circle',{cx:CX,cy:CY,r:7,fill:'#f2ffff'});
+  latG.appendChild(coreNode); latNodes.push({e:coreNode,t0:7.6,core:true});
+  ringPts.forEach((pts,ri)=>pts.forEach((p,i)=>{
+    const c=el('circle',{cx:p.x,cy:p.y,r:ri===0?4:ri===1?3:2.2,fill:ri===2?'#4fb6c8':'#dcfdff'});
+    latG.appendChild(c); latNodes.push({e:c,t0:7.75+ri*0.32+i*0.012,ri,i});
+    const h=el('circle',{cx:p.x,cy:p.y,r:8,fill:'none',stroke:'#8ff2ff','stroke-width':'1',opacity:'0'});
+    latG.appendChild(h); latNodes[latNodes.length-1].h=h;
+  }));
+
+  // ---------- globe ----------
+  const sphG=$('#sphere');
+  const meridians=[];
+  for(let i=0;i<7;i++){ const e=el('ellipse',{cx:CX,cy:CY,rx:R,ry:R,fill:'none',stroke:'#63d9ec','stroke-width':'1.1',opacity:'.5'});
+    sphG.appendChild(e); meridians.push(e); }
+  const parallels=[];
+  [[-0.62,0.14],[-0.32,0.12],[0,0.10],[0.32,0.12],[0.62,0.14]].forEach(([f,k])=>{
+    const rr=R*Math.sqrt(Math.max(0,1-f*f));
+    const e=el('ellipse',{cx:CX,cy:CY+f*R,rx:rr,ry:rr*k,fill:'none',stroke:'#3d95a6','stroke-width':'1',opacity:'.28'});
+    sphG.appendChild(e); parallels.push(e);
+  });
+  const outer=el('circle',{cx:CX,cy:CY,r:R,fill:'none',stroke:'#8fe9ff','stroke-width':'1.8',opacity:'.9'});
+  const halo=el('circle',{cx:CX,cy:CY,r:R+18,fill:'none',stroke:'#59d4e8','stroke-width':'1',opacity:'.2'});
+  const latRing=el('ellipse',{cx:CX,cy:CY,rx:R*1.15,ry:R*0.2,fill:'none',stroke:'#7fe8ff','stroke-width':'1','opacity':'.35',transform:'rotate(-18 '+CX+' '+CY+')'});
+  const innerGlow=el('circle',{cx:CX,cy:CY,r:R*0.92,fill:'url(#haze)',opacity:'.9'});
+  const scanLine=el('rect',{x:CX-R,y:CY-R,width:R*2,height:2,fill:'#bff6ff',opacity:'0'});
+  const scanTrail=el('rect',{x:CX-R,y:CY-R,width:R*2,height:26,fill:'url(#scanTrail)',opacity:'0'});
+  sphG.appendChild(innerGlow);sphG.appendChild(scanTrail);sphG.appendChild(scanLine);
+  sphG.appendChild(halo);sphG.appendChild(latRing);sphG.appendChild(outer);
+
+  // ---------- tool traces (copper) ----------
+  const ttG=$('#toolTraces'); const traces=[];
+  for(let i=0;i<7;i++){
+    const y0=CY+(i-3)*54;
+    const x1=CX+R*0.94, y1=CY+(i-3)*36;
+    const p=el('path',{d:'M1260 '+y0+' C'+(x1+150)+' '+y0+' '+(x1+40)+' '+y1+' '+x1+' '+y1,
+      fill:'none',stroke:'#b8452f','stroke-width':'1.1','stroke-linecap':'round',opacity:'.75'});
+    ttG.appendChild(p);
+    const head=el('circle',{cx:1260,cy:y0,r:3.2,fill:'#ffd9cf'});
+    ttG.appendChild(head);
+    traces.push({p,head,y0,y1,x1,t0:14.35+i*0.12});
+  }
+
+  // ---------- wordmark ----------
+  const WM=['M207 200 L267 34 L327 200 M231 140 L303 140',
+            'M519.7 56.9 A76 85 0 1 0 519.7 177.1 L519.7 118 L484 118'];
+  const fillWm=(g,stroke,w)=>{WM.forEach(d=>g.appendChild(el('path',{d,fill:'none',stroke,'stroke-width':w})));};
+  fillWm($('#wmWhite'),'#f4ffff',20);
+  $('#wmWhite').appendChild(el('path',{d:'M582 36 L582 198',fill:'none',stroke:'#ff2d2d','stroke-width':26}));
+  fillWm($('#wmRed'),'#ff2d2d',20);
+  fillWm($('#wmCyan'),'#31e6ff',20);
+  const caption=$('#wordmark');
+  const cap=el('text',{x:CX,y:536,'text-anchor':'middle',fill:'#8fe4f5','font-size':'14',class:'mono'});
+  cap.textContent='通 用 人 工 智 能 · 已 就 位';
+  caption.appendChild(cap);
+  const cap2=el('text',{x:CX,y:568,'text-anchor':'middle',fill:'#3f8493','font-size':'12',class:'mono'});
+  cap2.textContent='DEEPSEEK HARNESS · 通向 AGI 的过渡';
+  caption.appendChild(cap2);
+  const cap3=el('text',{x:CX,y:610,'text-anchor':'middle',fill:'#a8f4ff','font-size':'15',class:'mono'});
+  cap3.textContent='一 切 问 题 · 皆 有 解';
+  caption.appendChild(cap3);
+
+  // ---------- spectrum ----------
+  const specG=$('#spectrum'); const specBars=[];
+  for(let i=0;i<22;i++){
+    const b=el('rect',{x:String(1176-i*9),y:String(690),width:'3',height:'2',fill:i%5===0?'#ff3b30':'#7fe8ff',opacity:'.8'});
+    specG.appendChild(b); specBars.push(b);
+  }
+
+  // ---------- status ----------
+  const STATUS=[['插件装载','挂载',3.55],['运行时连接','握手完成',7.95],['工具接入','注册完成',14.6],['上下文装配','已装配',19.6],['智能体就位','在线',23.9]];
+  const statusG=$('#status');
+  const lines=STATUS.map(([k,v,t0],i)=>{
+    const g=el('g',{opacity:'0'});
+    const a=el('text',{x:'104',y:String(540+i*24),fill:'#5cb4c4','font-size':'12',class:'mono'});
+    a.textContent='› '+k;
+    const b=el('text',{x:'344',y:String(540+i*24),fill:'#d6fbff','font-size':'12',class:'mono'});
+    b.textContent=v;
+    g.appendChild(a);g.appendChild(b);statusG.appendChild(g);
+    return {g,t0,full:v};
+  });
+
+  // ---------- self test ----------
+  const TESTS=[['内核','0.2.0-rc.2 · 就绪',3.45],['插件图','28 · 挂载完成',4.05],['运行时','握手完成 · 2.4 ms',4.65],['工具桥','10 项已注册',5.25],['上下文','装配 100%',5.85]];
+  const testG=$('#selfTest'); const testLines=[];
+  TESTS.forEach(([k,v,t0],i)=>{
+    const g=el('g',{opacity:'0'});
+    const a=el('text',{x:'104',y:String(196+i*26),fill:'#4f9aa8','font-size':'10.5',class:'mono'});
+    a.textContent='▸ '+k;
+    const b=el('text',{x:'196',y:String(196+i*26),fill:'#9adde9','font-size':'10.5',class:'mono'});
+    b.textContent='';
+    g.appendChild(a);g.appendChild(b);testG.appendChild(g);
+    testLines.push({g,b,t0,full:v});
+  });
+
+  // ---------- plugin panel ----------
+  const PLUGINS=['dsh-base','dsh-web-app','dshmarket','dsh-memory-plugin','dsh-context','dsh-opencodego-usage',
+    'dsh-restart-fab','dsh-better-sidebar','dsh-genui','archify-dsh','dsh-session-actions','dsh-plugin-pin-session',
+    'dsh-catppuccin','dsh-theme-mineradio','dsh-client-ui-task-board','hindsight-coding-agents','dsh-client-ui-skill-explorer',
+    'dsh-pdf-edit','dsh-timeline','dsh-univer-office','dsh-client-ui-git-graph','dsh-cost-meter','billion-context',
+    'dsh-agent-teams','dsh-find-plugin','dsh-im-connect','dsh-550c-boot','dsh-automation'];
+  const plugG=$('#plugPanel'); const plugRows=[];
+  const plugBg=el('rect',{x:'896',y:'164',width:'288',height:'304',fill:'#000407',opacity:'.82',stroke:'#12414b','stroke-width':'1'});
+  plugG.appendChild(plugBg);
+  const plugTitle=el('text',{x:'908',y:'186',fill:'#4f9aa8','font-size':'11',class:'mono'});
+  plugTitle.textContent='▍ 插件装载 · PLUGIN TREE';
+  plugG.appendChild(plugTitle);
+  const plugCount=el('text',{x:'1172',y:'186',fill:'#7fe8ff','font-size':'11','text-anchor':'end',class:'mono'});
+  plugCount.textContent='0 / 28';
+  plugG.appendChild(plugCount);
+  PLUGINS.forEach((name,i)=>{
+    const col=i%2, row=(i-col)/2;
+    const x=908+col*136, y=206+row*16;
+    const g=el('g',{opacity:'0'});
+    const bar=el('line',{x1:String(x),y1:String(y-4),x2:String(x+5),y2:String(y-4),stroke:'#3fc8dc','stroke-width':'2'});
+    const tx=el('text',{x:String(x+9),y:String(y),fill:'#79c4d2','font-size':'8.6','class':'mono'});
+    tx.textContent=name.replace(/^dsh-/,'').replace(/^client-ui-/,'ui-').slice(0,21);
+    g.appendChild(bar);g.appendChild(tx);plugG.appendChild(g);
+    plugRows.push({g,i});
+  });
+  const plugFoot=el('text',{x:'908',y:'456',fill:'#2f6d79','font-size':'9','class':'mono'});
+  plugFoot.textContent='CORDIS · 一切皆插件 · 零源码改动';
+  plugG.appendChild(plugFoot);
+
+  // ---------- tool panel ----------
+  const TOOLS=['bash','read','edit','write','glob','grep','skill','subagent','web_fetch','agent_teams'];
+  const toolG=$('#toolPanel'); const toolRows=[];
+  const toolBg=el('rect',{x:'896',y:'164',width:'288',height:'304',fill:'#000407',opacity:'.82',stroke:'#12414b','stroke-width':'1'});
+  toolG.appendChild(toolBg);
+  const toolTitle=el('text',{x:'908',y:'186',fill:'#4f9aa8','font-size':'11',class:'mono'});
+  toolTitle.textContent='▍ 工具接入 · TOOL BRIDGE';
+  toolG.appendChild(toolTitle);
+  const toolCount=el('text',{x:'1172',y:'186',fill:'#7fe8ff','font-size':'10.5','text-anchor':'end',class:'mono'});
+  toolCount.textContent='0 项已注册';
+  toolG.appendChild(toolCount);
+  TOOLS.forEach((name,i)=>{
+    const y=214+i*19;
+    const g=el('g',{opacity:'0'});
+    const tx=el('text',{x:'1172',y:String(y),fill:'#9adde9','font-size':'10','text-anchor':'end',class:'mono'});
+    tx.textContent=name+'  ●';
+    g.appendChild(tx);toolG.appendChild(g);
+    toolRows.push({g,i});
+  });
+  const toolFoot=el('text',{x:'1172',y:'452',fill:'#2f6d79','font-size':'9','text-anchor':'end',class:'mono'});
+  toolFoot.textContent='MCP · openviking 已连接';
+  toolG.appendChild(toolFoot);
+
+  // ---------- context sparks ----------
+  const sparkG=$('#sparks'); const sparks=[];
+  for(let i=0;i<56;i++){
+    const c=el('circle',{cx:0,cy:0,r:i%7===0?2:1.2,fill:'#bff6ff',opacity:'0'});
+    sparkG.appendChild(c);
+    sparks.push({c,ang:(i/56)*Math.PI*2,rad:250+((i*37)%110),sp:0.5+((i*13)%7)/7});
+  }
+
+  // ---------- render ----------
+  function render(t){
+    const outAll=1-ramp(t,29.2,29.92);
+    $('#world').setAttribute('opacity',String(outAll));
+    $('#hud').setAttribute('opacity',String(outAll));
+
+    const cam=1+0.055*easeOut(ramp(t,7.6,27.4));
+    const shake = t>23.6 ? 9*Math.exp(-(t-23.6)*6)*Math.sin((t-23.6)*55) : 0;
+    $('#world').setAttribute('transform','translate('+(640+shake).toFixed(2)+' '+(360+shake*0.6).toFixed(2)+') scale('+cam.toFixed(4)+') translate(-640 -360)');
+
+    const lift=ramp(t,1.9,3.2);
+    $('#gridFine').setAttribute('opacity',String(0.42*lift*(0.7+0.3*Math.sin(t*0.7))));
+    $('#gridBg').setAttribute('opacity',String(0.5*lift));
+    bg.setAttribute('opacity',String(0.85*ramp(t,1.9,3.4)));
+    $('#hazeC').setAttribute('opacity',String(ramp(t,3.0,6.0)*0.85*(1-0.5*ramp(t,23.4,23.62))));
+
+    // dust drifts upward; during 19–23 s it is pulled toward the core
+    dust.setAttribute('opacity',String(ramp(t,3.0,4.5)*0.8));
+    const suck=easeIO(ramp(t,20.0,23.1));
+    dustEls.forEach(d=>{
+      const y=((d.y0 - t*d.sp)%720+720)%720;
+      const ang=(d.ph*1.7)+t*0.15;
+      const rx=(d.x-CX)*(1-suck), ry=(y-CY)*(1-suck);
+      d.c.setAttribute('cx',String(CX+rx+(1-suck)*0));
+      d.c.setAttribute('cy',String(CY+ry));
+      d.c.setAttribute('opacity',String((0.12+0.3*Math.abs(Math.sin(t*0.9+d.ph)))*(1-suck*0.85)));
+    });
+
+    // seed
+    const seedIn=ramp(t,1.0,1.9), seedOut=1-ramp(t,7.5,7.9);
+    const seedPulse=1+0.35*Math.sin(t*3.1);
+    const seedR=2.6+3.2*seedPulse*(1-ramp(t,3.0,4.2)*0.35);
+    $('#seed').setAttribute('opacity',String(seedIn*seedOut*(0.85+0.15*Math.sin(t*5))))
+    $('#seed').setAttribute('r',String(seedR));
+    $('#seedGlow').setAttribute('opacity',String(0.75*seedIn*seedOut));
+    $('#seedGlow').setAttribute('r',String(90+50*seedPulse));
+
+    // hud
+    $('#hud').setAttribute('opacity',String(ramp(t,1.3,2.3)*outAll));
+    $('#clock').textContent='T+00:00:'+String(Math.floor(t)).padStart(2,'0');
+    $('#spec').setAttribute('opacity',String(0.5*ramp(t,1.8,3.0)));
+    specBars.forEach((b,i)=>{
+      const h=2+34*Math.abs(Math.sin(t*2.7+i*0.6)*Math.sin(t*1.1+i*0.21));
+      b.setAttribute('y',String(688-h));
+      b.setAttribute('height',String(h));
+    });
+    const barT=ramp(t,1.4,29.3);
+    $('#bar').setAttribute('opacity',String(ramp(t,1.4,2.0)*(1-ramp(t,29.3,29.9))));
+    $('#bar').setAttribute('width',String(1088*barT));
+
+    // act label (typewriter)
+    const ACTS=[[2.2,'系统冷启动 · COLD BOOT'],[3.4,'自检 · SELF TEST'],[7.8,'认知网络 · COGNITIVE LATTICE'],
+      [14.2,'工具桥接 · TOOL BRIDGE'],[19.2,'上下文装配 · CONTEXT ASSEMBLY'],[23.9,'智能体就位 · ONLINE']];
+    let label='';
+    for(const [t0,s] of ACTS){ if(t>=t0) label=s; }
+    const last=ACTS.filter(([t0])=>t>=t0).pop();
+    const p=last?ramp(t,last[0],last[0]+0.7):0;
+    $('#actLabel').textContent=label.slice(0,Math.max(0,Math.ceil(label.length*p)));
+    $('#actLabel').setAttribute('opacity',String(0.9*ramp(t,2.2,2.6)));
+
+    // self test
+    const testIn=ramp(t,3.4,3.6), testOut=1-ramp(t,7.1,7.5);
+    testG.setAttribute('opacity',String(testIn*testOut));
+    testLines.forEach((l,i)=>{
+      const q=ramp(t,l.t0,l.t0+0.35);
+      l.g.setAttribute('opacity',String(q));
+      l.b.textContent=q>0?l.full.slice(0,Math.max(1,Math.ceil(l.full.length*q))):'';
+    });
+
+    // ring scanner
+    const rsIn=ramp(t,3.0,3.6), rsOut=1-ramp(t,7.1,7.6);
+    $('#ringScan').setAttribute('opacity',String(rsIn*rsOut));
+    $('#scanArc').setAttribute('stroke-dasharray','150 900');
+    $('#scanArc').setAttribute('transform','rotate('+String(t*70)+' 640 360)');
+    $('#scanArc').setAttribute('stroke-width',String(1.2+0.6*Math.sin(t*4)));
+    const ph=((t-3.2)/2.2)%1;
+    const on=rsIn*(1-ramp(t,6.4,6.9));
+    $('#scanBar').setAttribute('y',String(CY-170+340*clamp(ph*1.5,0,1)));
+    $('#scanBar').setAttribute('opacity',String(0.5*on*(ph<0.62?1:0)));
+    $('#scanBarTrail').setAttribute('y',String(CY-192+340*clamp(ph*1.5,0,1)));
+    $('#scanBarTrail').setAttribute('opacity',String(on*(ph<0.62?1:0)));
+
+    // plugin panel
+    const panOut=1-ramp(t,7.1,7.6);
+    const panIn=ramp(t,3.3,3.7);
+    plugG.setAttribute('opacity',String(panIn*panOut));
+    plugRows.forEach((o)=>{ o.g.setAttribute('opacity',String(ramp(t,3.55+o.i*0.085,3.75+o.i*0.085))); });
+    plugCount.textContent=clamp(Math.floor((t-3.55)/0.085),0,28)+' / 28';
+    plugFoot.setAttribute('opacity',String(ramp(t,5.6,6.0)*panOut*0.9));
+
+    // lattice → globe
+    const latOut=1-ramp(t,10.0,10.7);
+    latG.setAttribute('opacity',String(ramp(t,7.55,7.9)*latOut));
+    latEdges.forEach(o=>{
+      const q=easeOut(ramp(t,o.t0,o.t0+0.5));
+      o.e.setAttribute('stroke-dasharray','1200');
+      o.e.setAttribute('stroke-dashoffset',String(1200*(1-q)));
+    });
+    latNodes.forEach(o=>{
+      const q=ramp(t,o.t0,o.t0+0.3);
+      o.e.setAttribute('opacity',String(q));
+      if(o.h){ const k=((t*0.7+o.i*0.15)%1); o.h.setAttribute('opacity',String(q*0.4*(1-k))); o.h.setAttribute('r',String(6+k*11)); }
+    });
+
+    const sphIn=ramp(t,9.5,10.6), sphOut=1-ramp(t,23.05,23.5);
+    sphG.setAttribute('opacity',String(sphIn*sphOut));
+    meridians.forEach((e,i)=>{
+      const q=t*0.5+i*Math.PI/7;
+      e.setAttribute('rx',String(Math.max(2,Math.abs(Math.cos(q))*R)));
+      e.setAttribute('opacity',String(0.18+0.5*Math.abs(Math.cos(q))));
+    });
+    latRing.setAttribute('transform','rotate('+String(-18+t*36)+' 640 360)');
+    outer.setAttribute('opacity',String((0.9*(0.85+0.15*Math.sin(t*3)))*(1-0.35*ramp(t,14.2,15.2))));
+    halo.setAttribute('opacity',String(0.2*(1+0.6*Math.sin(t*2.2))));
+    const sc=((t-10.6)/1.6)%1;
+    const scOn=sphIn*(1-ramp(t,12.0,12.5))*(1-ramp(t,23.0,23.4));
+    scanLine.setAttribute('y',String(CY-R+R*2*clamp(sc*1.5,0,1)));
+    scanLine.setAttribute('opacity',String(0.5*scOn*(sc<0.66?1:0)));
+    scanTrail.setAttribute('y',String(CY-R+R*2*clamp(sc*1.5,0,1)-26));
+    scanTrail.setAttribute('opacity',String(scOn*(sc<0.66?1:0)));
+    sphG.setAttribute('transform','translate(640 360) scale('+(0.9+0.1*easeOut(sphIn)).toFixed(4)+') translate(-640 -360)');
+
+    // seam + traces + tool panel (14.2–19.0)
+    const seamOn=ramp(t,14.2,14.7)*(1-ramp(t,18.4,18.9));
+    $('#seam').setAttribute('opacity',String(seamOn*0.9));
+    $('#seamLine').setAttribute('stroke-width',String(1.4+1.2*Math.sin(t*6)));
+    $('#seamGlow').setAttribute('opacity',String(0.3+0.25*Math.sin(t*6)));
+
+    const ttOn=ramp(t,14.3,14.7)*(1-ramp(t,18.6,19.1));
+    ttG.setAttribute('opacity',String(ttOn));
+    traces.forEach((o)=>{
+      const q=easeIO(ramp(t,o.t0,o.t0+0.9));
+      o.p.setAttribute('stroke-dasharray','1200');
+      o.p.setAttribute('stroke-dashoffset',String(1200*(1-q)));
+      o.head.setAttribute('cx',String(1260-(1260-o.x1)*q));
+      o.head.setAttribute('cy',String(o.y0+(o.y1-o.y0)*q));
+      o.head.setAttribute('opacity',String(q>0.02?1:0));
+    });
+
+    const toolIn=ramp(t,14.3,14.7), toolOut=1-ramp(t,18.4,18.9);
+    toolG.setAttribute('opacity',String(toolIn*toolOut));
+    toolRows.forEach((o)=>{ o.g.setAttribute('opacity',String(ramp(t,14.65+o.i*0.22,14.85+o.i*0.22))); });
+    toolCount.textContent=clamp(Math.floor((t-14.65)/0.22),0,10)+' 项已注册';
+    toolFoot.setAttribute('opacity',String(ramp(t,17.2,17.6)*toolOut*0.9));
+
+    // context rings + sparks
+    const ctxOn=ramp(t,19.1,19.7)*(1-ramp(t,22.95,23.35));
+    $('#ctx').setAttribute('opacity',String(ctxOn*0.9));
+    $('#ctxRing1').setAttribute('stroke-dasharray','520 1200');
+    $('#ctxRing1').setAttribute('transform','rotate('+String(t*95)+' 640 360)');
+    $('#ctxRing2').setAttribute('stroke-dasharray','300 1500');
+    $('#ctxRing2').setAttribute('transform','rotate('+String(-t*70)+' 640 360)');
+    $('#ctxRing3').setAttribute('stroke-dasharray','140 1800');
+    $('#ctxRing3').setAttribute('transform','rotate('+String(t*45)+' 640 360)');
+    sparks.forEach((s,i)=>{
+      const q=clamp((t-20.0)/3.0,0,1);
+      const r=s.rad*(1-Math.pow(q,1.6));
+      const a=s.ang+t*s.sp*0.6;
+      s.c.setAttribute('cx',String(CX+Math.cos(a)*r));
+      s.c.setAttribute('cy',String(CY+Math.sin(a)*r*0.85));
+      s.c.setAttribute('opacity',String(ctxOn*(0.25+0.6*Math.abs(Math.sin(t*2+i))) * (q<0.98?1:0)));
+    });
+
+    // status list
+    lines.forEach((l,i)=>{
+      const q=ramp(t,l.t0,l.t0+0.3);
+      l.g.setAttribute('opacity',String(q));
+      l.g.childNodes[1].textContent=q>0?l.full.slice(0,Math.max(1,Math.ceil(l.full.length*q))):'';
+    });
+
+    // blackout before impact
+    const blackOn=ramp(t,23.12,23.3)*(1-ramp(t,23.56,23.6));
+    $('#blackout').setAttribute('opacity',String(blackOn));
+
+    // flash + wordmark
+    const flash = t < 23.6 ? 0 : Math.max(0, 0.92*(1-ramp(t,23.6,23.95)) - 0.4*ramp(t,23.95,24.4));
+    $('#flash').setAttribute('opacity',String(flash));
+
+    const wmIn=ramp(t,23.62,23.9);
+    $('#wordmark').setAttribute('opacity',String(wmIn*(1-ramp(t,29.4,29.9))));
+    const conv=1-easeOut(ramp(t,23.62,24.55));
+    const pop=easeBack(clamp(ramp(t,23.62,24.25),0,1));
+    const scale=(0.62+0.8*pop);
+    const TX=640-402.5*scale, TY=352-117*scale;
+    const base='translate('+TX+' '+TY+') scale('+scale.toFixed(3)+')';
+    $('#wmWhite').setAttribute('transform',base);
+    $('#wmRed').setAttribute('transform','translate('+String(TX+16*conv)+' '+String(TY+6*conv)+') scale('+scale.toFixed(3)+')');
+    $('#wmCyan').setAttribute('transform','translate('+String(TX-16*conv)+' '+String(TY-6*conv)+') scale('+scale.toFixed(3)+')');
+    $('#wmRed').setAttribute('opacity',String(0.02+0.55*conv));
+    $('#wmCyan').setAttribute('opacity',String(0.02+0.5*conv));
+
+    const st=ramp(t,24.1,24.9);
+    $('#streakBar').setAttribute('opacity',String(st>0&&st<1?0.8*(1-Math.abs(st-0.5)*1.3):0));
+    $('#streakBar').setAttribute('x',String(-600+st*1900));
+
+    // 冲击波 + 竖向扫光 + 定版呼吸
+    const shockP=ramp(t,23.6,24.5);
+    $('#shock').setAttribute('r',String(760*easeOut(shockP)));
+    $('#shock').setAttribute('opacity',String(0.75*(1-shockP)));
+    $('#shock').setAttribute('stroke-width',String(0.6+2.2*(1-shockP)));
+    if(t>24.5){ const br=1+0.007*Math.sin((t-24.5)*1.5); $('#wordmark').setAttribute('transform','translate(640 360) scale('+br.toFixed(4)+') translate(-640 -360)'); }
+
+    cap.setAttribute('opacity',String(ramp(t,24.75,25.35)));
+    cap.setAttribute('y',String(536+12*(1-easeOut(ramp(t,24.75,25.35)))));
+    cap2.setAttribute('opacity',String(ramp(t,25.5,26.1)));
+    cap2.setAttribute('y',String(568+10*(1-easeOut(ramp(t,25.5,26.1)))));
+    cap3.setAttribute('opacity',String(ramp(t,27.2,27.8)));
+    cap3.setAttribute('y',String(604+8*(1-easeOut(ramp(t,27.2,27.8)))));
+
+    // 交棒：一条亮线从中心拉开，随后整幅画面收黑交给真实界面
+    const gate=ramp(t,28.9,29.45);
+    const gateW=1280*easeIO(gate);
+    $('#gateLine').setAttribute('x',String(640-gateW/2));
+    $('#gateLine').setAttribute('width',String(gateW));
+    $('#gateLine').setAttribute('opacity',String(gate>0?0.85*(1-ramp(t,29.45,29.9)):0));
+  }
+
+  const freeze=new URLSearchParams(location.search).get('t');
+  if(freeze!==null && freeze!==''){ render(parseFloat(freeze)); }
+  else {
+    const t0=performance.now();
+    const loop=(now)=>{ const t=(now-t0)/1000; render(t); if(t<30.2) requestAnimationFrame(loop); };
+    requestAnimationFrame(loop);
+    try{ const a=document.getElementById('au'); if(a){ a.volume=0.9; a.play().catch(()=>{}); } }catch(e){}
+    addEventListener('pointerdown',()=>{ const a=document.getElementById('au'); if(a&&a.paused) a.play().catch(()=>{}); },{once:true});
+  }
+  window.__render=render;
+})();
+</script>
+<audio id="au" src="audio/agi-boot-30.mp3" preload="auto"></audio>
+</body></html>

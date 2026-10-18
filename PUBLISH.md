@@ -80,7 +80,7 @@ npm view dsh-for-agi-splash version dist.tarball
 ```bash
 cd ~/Desktop/DSH-for-AGI开屏动画
 gh repo create dsh-for-agi-splash --public --source=. --remote=origin --push \
-  --description "DSH-for-AGI 开屏动画：9.9 秒五幕启动链 + 中文旁白，可跳过、可配置"
+  --description "DSH-for-AGI 开屏动画：9.9 秒精简版 + 30 秒剧场版，中文旁白，可跳过、可配置"
 gh repo edit --add-topic dsh-plugin --add-topic dsh --add-topic splash-screen --add-topic boot-animation
 git push --tags 2>/dev/null || true
 ```

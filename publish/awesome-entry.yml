@@ -2,5 +2,5 @@ url: https://github.com/<owner>/dsh-for-agi-splash
 name: <owner>/dsh-for-agi-splash
 category: ui
 description:
-  en: 'A 9.9-second cold-start title sequence for DeepSeek Harness: five acts trace the real boot chain — plugins load, the runtime connects, tools register, context assembles, the agent comes online — with a Chinese voice-over and a synthesized soundtrack, then hands off to the UI. Click anywhere or press Esc to skip, and its page in Settings controls the switch, volume, skip hint and replay.'
-  zh: 给 DSH 加一段约 10 秒的冷启动片头：五幕依次走完真实启动链（插件装载、运行时连接、工具接入、上下文装配、智能体就位），配中文旁白与逐样本合成的音效，播完交棒主界面。点击或 Esc 随时跳过，设置里的「开屏动画」可开关、调音量、改跳过提示语并当场重播。
+  en: 'Two cold-start title sequences for DeepSeek Harness: a 9.9-second five-act cut that traces the real boot chain (plugins load, runtime connects, tools register, context assembles, agent online), and a 30-second theatrical cut that adds a cold black open, a self-test scan, a cognitive-network bloom, a copper tool-bridge, a silent wind-up and a full-screen AGI reveal. Both carry a Chinese voice-over and a synthesized soundtrack, skip on click or Esc, and are controlled from the plugin''s page in Settings (auto after install/upgrade, always short, always theatrical, volume, skip hint, replay).'
+  zh: 给 DSH 加两套冷启动片头：9.9 秒精简版五幕走完真实启动链（插件装载、运行时连接、工具接入、上下文装配、智能体就位）；30 秒剧场版多了黑场冷启动、自检扫描、认知网络展开、铜线工具桥接、静音蓄力与全屏 AGI 就位。两版都配中文旁白与逐样本合成的音效，点击或 Esc 随时跳过；设置里的「开屏动画」可选自动 / 每次剧场版 / 每次精简版，并调音量、改提示语、当场重播。

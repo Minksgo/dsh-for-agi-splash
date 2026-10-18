@@ -439,10 +439,10 @@
   pointer-events:none;z-index:99">点击任意处从头重播 · 地址栏加 ?t=4.9 冻结在某一秒</div>
 <script>
 (function () {
-  var frozen = new URLSearchParams(location.search).get('t');
+  var frozen = new URLSearchParams(location.search).get("t");
   if (frozen !== null) {
     var hintEl = document.getElementById('hint');
-    if (hintEl) hintEl.style.display = 'none';
+    if (hintEl) hintEl.style.display = "none";
     return;
   }
   var audio = document.getElementById('au');

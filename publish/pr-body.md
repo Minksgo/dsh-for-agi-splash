@@ -1,6 +1,6 @@
 ## What
 
-Adds **dsh-for-agi-splash** — a 9.9-second cold-start title sequence for DeepSeek Harness, followed by the app it belongs to.
+Adds **dsh-for-agi-splash** — two cold-start title sequences for DeepSeek Harness (a 9.9-second cut and a 30-second theatrical cut), followed by the app it belongs to.
 
 - **Five acts, real data.** Plugins load (each mounted bundle lights up), the runtime connects (wireframe sphere assembles), tools register (the bridge lists `bash`, `read`, `edit`, `write`, `glob`, `grep`, `skill`, `subagent`, `web_fetch`, `agent_teams`), context assembles (concentric cognition net + alignment arc), the agent comes online (AGI wordmark).
 - **First frame is the splash.** The host half injects one style and one synchronous script through `webserver/index-inject`, painting the cover while `<head>` is still parsing — before the shell's "Loading plugins…" card exists. The client half mounts the same shadow root on the next task, so there is no seam and no flash of the boot card.

@@ -43,8 +43,10 @@ window.__ModuleLoader__.load({
 		:host(.agi-out){opacity:0;transition:opacity 420ms cubic-bezier(.4,0,.2,1) 200ms}
 		:host(.agi-out) #boot{opacity:0;transition:opacity 200ms ease-out}
 		#boot{position:absolute;inset:0;background:#000407}
-		#agiScene{position:absolute;inset:0;width:100%;height:100%;display:block}
-		#agiScene text{font-family:"PingFang SC","SF Mono",Menlo,Monaco,Consolas,monospace}
+		.agi-cut{position:absolute;inset:0;display:none}
+		.agi-cut.on{display:block}
+		#agiScene,#agiScene30{position:absolute;inset:0;width:100%;height:100%;display:block}
+		#agiScene text,#agiScene30 text{font-family:"PingFang SC","SF Mono",Menlo,Monaco,Consolas,monospace}
 		#agiAudio{display:none}
 		.agi-skip{position:absolute;left:0;right:0;bottom:10px;text-align:center;font:10px/1.6 "PingFang SC","SF Mono",monospace;letter-spacing:.22em;color:#3f8493;opacity:.55;pointer-events:none}
 		`;
@@ -62,8 +64,37 @@ window.__ModuleLoader__.load({
 		const DEFAULT_HINT = '点击任意处跳过 · ESC';
 		const FADE_MS = 700;
 
+		/** 'auto' 装完或升级后播一次剧场版；'long' 每次 30 s；'short' 每次 9.9 s。 */
+		function readMode() {
+			try {
+				const raw = window.localStorage.getItem(CFG + 'mode');
+				if (raw === 'long' || raw === 'short') return raw;
+			} catch (error) {}
+			return 'auto';
+		}
+
+		/** auto 模式下判断：本机第一次打开、或版本变了 → 剧场版。 */
+		function pickCut(force) {
+			if (force === 'long' || force === 'short') return force;
+			const mode = readMode();
+			if (mode === 'long' || mode === 'short') return mode;
+			try {
+				return window.localStorage.getItem(CFG + 'version') === PLUGIN_VERSION ? 'short' : 'long';
+			} catch (error) {
+				return 'short';
+			}
+		}
+
+		/** 剧场版播过就记版本；自动模式靠它避免每次启动都放 30 秒。 */
+		function markSeen(cut) {
+			if (cut !== 'long') return;
+			try {
+				window.localStorage.setItem(CFG + 'version', PLUGIN_VERSION);
+			} catch (error) {}
+		}
+
 		function readConfig() {
-			const out = { enabled: true, volume: 0.9, hint: DEFAULT_HINT };
+			const out = { enabled: true, volume: 0.9, hint: DEFAULT_HINT, mode: readMode() };
 			try {
 				const ls = window.localStorage;
 				if (ls.getItem(CFG + 'enabled') === '0') out.enabled = false;
@@ -87,6 +118,7 @@ window.__ModuleLoader__.load({
 				if ('enabled' in patch) ls.setItem(CFG + 'enabled', patch.enabled ? '1' : '0');
 				if ('volume' in patch) ls.setItem(CFG + 'volume', String(patch.volume));
 				if ('hint' in patch) ls.setItem(CFG + 'hint', patch.hint);
+				if ('mode' in patch) ls.setItem(CFG + 'mode', patch.mode);
 			} catch (error) {
 				/* 存不下就只在本次生效 */
 			}
@@ -188,7 +220,8 @@ window.__ModuleLoader__.load({
 		 */
 		function mount(force) {
 			if (host !== null) return host;
-			if (force !== true && readOff()) {
+			const explicit = force === 'long' || force === 'short' ? force : null;
+			if (explicit === null && force !== true && readOff()) {
 				releaseCover();
 				return null;
 			}
@@ -213,20 +246,22 @@ window.__ModuleLoader__.load({
 			/* 与宿主半的握手：同一任务里退休底色，中间不出一帧空白。 */
 			releaseCover();
 			const reduced = prefersReduced();
-			if (reduced) {
+			if (reduced && explicit === null) {
 				try {
 					shadow.querySelector('#agiAudio').muted = true;
 				} catch (error) {}
 			}
-			const total = playBoot();
+			const cut = explicit !== null ? explicit : reduced ? 'short' : pickCut(undefined);
+			const total = playBoot(cut);
+			markSeen(cut);
 			host.addEventListener('pointerdown', finish, { passive: true });
 			window.addEventListener('keydown', onKey, true);
-			window.setTimeout(finish, (reduced ? 1200 : total > 0 ? total : 400) + 260);
+			window.setTimeout(finish, (reduced && explicit === null ? 1200 : total > 0 ? total : 400) + 260);
 			return host;
 		}
 
 		/** 重新播放：先当场拆掉旧的，再忽略开关重新上屏。 */
-		function replay() {
+		function replay(cut) {
 			const old = host;
 			host = null;
 			if (old !== null) {
@@ -238,7 +273,7 @@ window.__ModuleLoader__.load({
 			cancelled = false;
 			clearTimers();
 			removeKeyListener();
-			mount(true);
+			mount(cut === 'long' || cut === 'short' ? cut : true);
 		}
 
 		/* 模块求值即上屏：比 apply() 早，比 DSH 的启动卡片晚不了多少。 */
@@ -351,21 +386,34 @@ window.__ModuleLoader__.load({
 				setConfig(readConfig());
 			};
 
-			const startReplay = () => {
+			const startReplay = (cut) => {
 				setPlaying(true);
 				try {
-					replay();
+					replay(cut);
 				} catch (error) {
 					/* 上屏失败也不能把设置页带崩 */
 				}
-				window.setTimeout(() => setPlaying(false), 10400);
+				window.setTimeout(() => setPlaying(false), cut === 'long' ? 31200 : 10400);
 			};
 
-			const openPreview = () => {
+			const openPreview = (cut) => {
 				try {
-					window.open(location.origin + '/dsh-for-agi-splash/preview', '_blank', 'noopener');
+					const path = cut === 'long' ? '/dsh-for-agi-splash/preview/30' : '/dsh-for-agi-splash/preview';
+					window.open(location.origin + path, '_blank', 'noopener');
 				} catch (error) {}
 			};
+
+			const modeButton = (value, label) =>
+				React.createElement(
+					'button',
+					{
+						key: value,
+						type: 'button',
+						onClick: () => update({ mode: value }),
+						style: UI.button(config.mode === value),
+					},
+					label,
+				);
 
 			return React.createElement(
 				'div',
@@ -377,7 +425,7 @@ window.__ModuleLoader__.load({
 					React.createElement(
 						'div',
 						{ style: UI.desc },
-						'9.9 秒冷启动片头：插件装载 → 运行时连接 → 工具接入 → 上下文装配 → 智能体就位，中文旁白 + 全片音效。配置仅存于本机浏览器，换机器不跟随。',
+						'两套片头：9.9 秒精简版五幕启动链，和 30 秒剧场版（冷启动 → 自检 → 认知网络 → 工具桥接 → 上下文装配 → AGI 就位 → 交棒）。都有中文旁白与全片音效，随时点击跳过。配置仅存于本机浏览器，换机器不跟随。',
 					),
 				),
 				React.createElement(
@@ -394,6 +442,20 @@ window.__ModuleLoader__.load({
 							on: config.enabled,
 							onClick: () => update({ enabled: !config.enabled }),
 						}),
+					),
+					React.createElement(
+						Row,
+						{
+							title: '播放模式',
+							desc: '自动：装完或升级后的第一次启动播 30 秒剧场版，之后每次 9.9 秒；也可以固定其中一版。',
+						},
+						React.createElement(
+							'div',
+							{ style: { display: 'flex', gap: '6px', flex: '0 0 auto' } },
+							modeButton('auto', '自动'),
+							modeButton('long', '每次剧场版'),
+							modeButton('short', '每次精简版'),
+						),
 					),
 					React.createElement(
 						Row,
@@ -427,24 +489,47 @@ window.__ModuleLoader__.load({
 					),
 					React.createElement(
 						Row,
-						{ title: '重新播放', desc: '立即在当前窗口重播一次片头，不用重启应用。' },
+						{ title: '独立预览', desc: '在浏览器里单独看一遍，不影响当前窗口。' },
 						React.createElement(
 							'div',
 							{ style: { display: 'flex', gap: '8px', flex: '0 0 auto' } },
 							React.createElement(
 								'button',
-								{ type: 'button', onClick: openPreview, style: UI.button(false) },
-								'独立预览',
+								{ type: 'button', onClick: () => openPreview('short'), style: UI.button(false) },
+								'预览精简版',
+							),
+							React.createElement(
+								'button',
+								{ type: 'button', onClick: () => openPreview('long'), style: UI.button(false) },
+								'预览剧场版',
+							),
+						),
+					),
+					React.createElement(
+						Row,
+						{ title: '重新播放', desc: '立即在当前窗口重播一次，不用重启应用。' },
+						React.createElement(
+							'div',
+							{ style: { display: 'flex', gap: '8px', flex: '0 0 auto' } },
+							React.createElement(
+								'button',
+								{
+									type: 'button',
+									onClick: () => startReplay('short'),
+									disabled: playing,
+									style: Object.assign(UI.button(false), playing ? { opacity: 0.6, cursor: 'default' } : null),
+								},
+								'重播精简版',
 							),
 							React.createElement(
 								'button',
 								{
 									type: 'button',
-									onClick: startReplay,
+									onClick: () => startReplay('long'),
 									disabled: playing,
 									style: Object.assign(UI.button(true), playing ? { opacity: 0.6, cursor: 'default' } : null),
 								},
-								playing ? '播放中…' : '重新播放',
+								playing ? '播放中…' : '重播剧场版',
 							),
 						),
 					),
