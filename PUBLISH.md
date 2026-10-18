@@ -18,14 +18,14 @@
 | --- | --- |
 | 本地插件 v0.2.0，已装进 desktop profile（`link:`，重启生效） | ✅ |
 | `package.json` → `dsh.bundle.patch: ./cordis.patch.yml` | ✅ |
-| npm 包名 `dsh-for-agi-splash` 未被占用（registry 404） | ✅ |
+| npm 包已发布 `dsh-for-agi-splash@0.2.0`（2026-10-18 15:23 UTC+8，registry `latest` 可查） | ✅ |
 | `npm pack` 体检：7 文件 / 341 kB / 零运行期依赖 | ✅ |
 | Node v24.22.0 + npm 11.19.1 + gh 2.102.0（装在 `~/.local`，无 sudo） | ✅ |
-| npm 登录 | ⏳ 待授权：后台已开 `npm login --auth-type=web` |
+| npm 登录 | ✅ 账号 `wminks`（≠ GitHub 的 Minksgo）；已启用 2FA，发布走浏览器授权 |
 | GitHub 登录 / 仓库 | ✅ Minksgo；仓库已建并推 main + tag v0.2.0 |
 | awesome PR | ⏳ 等仓库满 1 天（脚本会自动跳过并提示 `--pr-only`） |
 
-GitHub 这一步已经完成（2026-10-18 14:38），现在只差 **npm 授权**。
+GitHub 与 npm 两条流水线都已完成（2026-10-18），只剩 awesome PR 要等仓库满 1 天。
 
 ```bash
 export PATH="$HOME/.local/bin:$PATH"
@@ -61,6 +61,19 @@ npm view dsh-for-agi-splash version dist.tarball
 - `files` 只放运行期需要的 7 个文件；`src/`、`assets/`、`scripts/` 不进包（`lib/client.js` 已内联音轨与画面）。
 - 发布后 `npm view` 要能看到 `latest` 与 `dist.tarball`；market 端会去 `https://registry.npmjs.org/<pkg>/latest` 校验包名、版本、`dsh.bundle.patch`。
 - 回滚只能 `npm deprecate`（72 小时内才允许 unpublish）；用户侧降级靠 `npm install <pkg>@<旧版本>`。
+
+### 2FA 与新包暂存（2026-10-18 实测）
+
+- 账号 `wminks` 的 2FA 绑的是 **security key（WebAuthn）**，没有 TOTP 动态码。`npm publish` 会以 `EOTP` 返回一条 `https://www.npmjs.com/auth/cli/<id>` 授权链接，**只有在伪终端里才打印完整链接**（非 TTY 下 npm 会把它打码成 `***`）：
+  ```sh
+  expect -c 'set timeout 8
+  spawn npm publish --access public
+  expect "Press ENTER"; send "\r"
+  set timeout 420; expect eof'
+  ```
+  浏览器里用安全密钥确认后，CLI 自动完成发布，不需要任何验证码。
+- 新包首发会先建占位版本 `0.0.0-stage`（描述就叫 "Temporary package placeholder for staged publishing"），真正的 `0.2.0` 约 1 分钟后落到 `latest`；这次首发**不会**出现在 `npm stage list` 或网页 Staged Packages 队列里，别被空列表误导。
+- 若 2FA 设成 "auth-and-writes"（发布也要 2FA），上面流程依旧可用；改成 auth-only 后发布不再要求 presence，但发布动作本身失去 2FA 保护。
 
 ## 2. 建 GitHub 仓库（awesome 用，也让别人能 `github:` 装）
 
