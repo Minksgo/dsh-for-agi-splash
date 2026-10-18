@@ -1,0 +1,98 @@
+{
+  "name": "dsh-for-agi-splash",
+  "version": "0.1.0",
+  "description": "DSH-for-AGI 开屏动画：9.9 秒冷启动片头，五幕走完 DSH 真实启动链（插件装载 → 运行时连接 → 工具接入 → 上下文装配 → 智能体就位），中文旁白 + 全片音效，点击或 Esc 随时跳过。",
+  "type": "module",
+  "main": "./lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "preview",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "MINks"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "splash",
+    "boot-animation",
+    "startup-animation",
+    "splash-screen",
+    "agi",
+    "deepseek-harness",
+    "开屏动画",
+    "启动动画",
+    "开机动画"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "dsh": {
+    "engines": {
+      "dsh": ">=0.2.0-rc.1"
+    },
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [],
+      "platform": "web"
+    },
+    "suite": {
+      "id": "dsh-for-agi-splash",
+      "role": "boot",
+      "title": "DSH-for-AGI 开屏动画"
+    }
+  },
+  "dshWorkshop": {
+    "schema": "omdsh-workshop-package/v1",
+    "type": "plugin",
+    "integration": {
+      "protocol": "harness-profile",
+      "artifact": "cordis.patch.yml"
+    },
+    "install": {
+      "mode": "transactional",
+      "adapter": "profile-bundle",
+      "failurePolicy": "generation-rollback",
+      "touchesCurrentBeforeActivation": false
+    },
+    "lifecycle": {
+      "activation": "restart-profile",
+      "dispose": "supported"
+    },
+    "permissions": [
+      "web:index-inject",
+      "dom:overlay",
+      "browser:local-storage",
+      "web:http-route"
+    ],
+    "compatibility": {
+      "dshVersions": [
+        "0.2.0-rc.1"
+      ]
+    },
+    "capability": {
+      "id": "agi-splash",
+      "kind": "ui",
+      "invocation": "Restart the profile's Web GUI (or open /dsh-for-agi-splash/preview in the same app), then read the first frame: document.querySelector('.agi-splash-host') and its shadowRoot's #boot <svg id=\"agiScene\">, plus document.documentElement.classList.contains('agi-first') during boot.",
+      "expected": "The index-injected cover paints before the shell's [data-dsh-boot] card, the client bundle mounts the same shadow root on the following task, the 9.9 s scene plays once with narration, then the overlay fades out and is removed."
+    },
+    "evidence": {
+      "install": null,
+      "failureIsolation": null,
+      "hotReload": null,
+      "remove": null
+    }
+  }
+}

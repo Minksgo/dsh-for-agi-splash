@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<style>
+  html,body{margin:0;height:100%;background:#000407;overflow:hidden}
+  #stage{position:fixed;inset:0;width:100vw;height:100vh;display:block}
+  text{font-family:"PingFang SC","SF Mono",Menlo,monospace}
+  .mono{letter-spacing:.18em}
+</style></head>
+<body>
+<svg id="stage" viewBox="0 0 1280 720" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <pattern id="grid" width="80" height="80" patternUnits="userSpaceOnUse">
+      <path d="M80 0H0V80" fill="none" stroke="#13414c" stroke-width="1" opacity=".55"/>
+    </pattern>
+    <pattern id="fine" width="16" height="16" patternUnits="userSpaceOnUse">
+      <path d="M16 0H0V16" fill="none" stroke="#0d3038" stroke-width="1" opacity=".5"/>
+    </pattern>
+    <pattern id="scan" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="1" fill="#8fe9ff" opacity=".07"/>
+    </pattern>
+    <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#e8feff" stop-opacity="1"/>
+      <stop offset="25%" stop-color="#59dcf2" stop-opacity=".5"/>
+      <stop offset="100%" stop-color="#59dcf2" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="haze" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#2ea7bd" stop-opacity=".22"/>
+      <stop offset="100%" stop-color="#2ea7bd" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="streak" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#9deeff" stop-opacity="0"/>
+      <stop offset="45%" stop-color="#d9feff" stop-opacity=".9"/>
+      <stop offset="100%" stop-color="#9deeff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="scanTrail" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8fe9ff" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#bff6ff" stop-opacity=".22"/>
+    </linearGradient>
+    <filter id="glow4"><feGaussianBlur stdDeviation="4"/></filter>
+    <filter id="glow10"><feGaussianBlur stdDeviation="10"/></filter>
+  </defs>
+
+  <rect width="1280" height="720" fill="#000407"/>
+  <rect id="gridFine" width="1280" height="720" fill="url(#fine)" opacity="0"/>
+  <rect id="gridBg" width="1280" height="720" fill="url(#grid)" opacity="0"/>
+  <circle id="hazeC" cx="640" cy="360" r="420" fill="url(#haze)" opacity="0"/>
+  <rect width="1280" height="720" fill="url(#scan)" opacity=".5"/>
+
+  <g id="brackets" opacity="0"></g>
+  <g id="dust" opacity="0"></g>
+
+  <circle id="dotGlow" cx="640" cy="360" r="120" fill="url(#coreGlow)" opacity="0"/>
+  <circle id="dot" cx="640" cy="360" r="5" fill="#f0ffff" opacity="0"/>
+
+  <g id="lattice" opacity="0"></g>
+  <g id="sphere" opacity="0"></g>
+  <g id="reason" opacity="0"></g>
+  <g id="align" opacity="0"></g>
+
+  <g id="wordmark" opacity="0">
+    <g id="wmRed" filter="url(#glow4)"></g>
+    <g id="wmCyan" filter="url(#glow4)"></g>
+    <g id="wmWhite"></g>
+  </g>
+  <rect id="streakBar" x="-600" y="349" width="600" height="22" fill="url(#streak)" opacity="0"/>
+
+  <g id="hud" opacity="0">
+    <line x1="96" y1="96" x2="1184" y2="96" stroke="#2b7d8c" stroke-width="1" opacity=".45"/>
+    <text x="104" y="58" fill="#8fe4f5" font-size="15" font-weight="600" class="mono">AGI</text>
+    <text x="152" y="58" fill="#4f9aa8" font-size="12" class="mono">通用人工智能 · 启动序列</text>
+    <text x="1176" y="58" fill="#4d8e9c" font-size="12" text-anchor="end" class="mono" id="clock">T+00:00:00</text>
+  <text x="1176" y="80" fill="#2f6d79" font-size="11" text-anchor="end" class="mono" id="spec">DSH 内核 0.2.0-rc.2 · 插件 28 · MIT</text>
+    <line x1="96" y1="700" x2="1184" y2="700" stroke="#2b7d8c" stroke-width="1" opacity=".45"/>
+    <g id="spectrum"></g>
+    <g id="panels">
+      <rect id="plugBg" x="96" y="180" width="290" height="278" fill="#000407" opacity="0" stroke="#12414b" stroke-width="1"/>
+      <rect id="toolBg" x="896" y="180" width="288" height="272" fill="#000407" opacity="0" stroke="#12414b" stroke-width="1"/>
+    </g>
+    <g id="status"></g>
+    <g id="plug"></g>
+    <g id="tools"></g>
+  </g>
+  <rect id="bar" x="0" y="712" width="0" height="2" fill="#7fe8ff" opacity="0"/>
+</svg>
+
+<script>
+(function(){
+  const NS='http://www.w3.org/2000/svg';
+  const $=(s)=>document.querySelector(s);
+  const el=(n,attrs)=>{const e=document.createElementNS(NS,n);for(const k in attrs)e.setAttribute(k,attrs[k]);return e;};
+  const CX=640, CY=360, R=196;
+  const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+  const ramp=(t,a,b)=>clamp((t-a)/(b-a),0,1);
+  const easeOut=(x)=>1-Math.pow(1-x,3);
+  const easeIO=(x)=>x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2;
+
+  // ---------- corner brackets ----------
+  const bg=$('#brackets');
+  const M=96, L=34;
+  [[M,M,1,1],[1280-M,M,-1,1],[M,720-M,1,-1],[1280-M,720-M,-1,-1]].forEach(([x,y,sx,sy])=>{
+    bg.appendChild(el('path',{d:'M'+x+' '+(y+L*sy)+' L'+x+' '+y+' L'+(x+L*sx)+' '+y,
+      fill:'none',stroke:'#5fd0e2','stroke-width':'1.6',opacity:'.65'}));
+  });
+
+  // ---------- dust ----------
+  const dust=$('#dust');
+  const dustEls=[];
+  for(let i=0;i<70;i++){
+    const c=el('circle',{cx:0,cy:0,r:(i%5===0?1.5:0.9),fill:'#9ceeff',opacity:'0'});
+    dust.appendChild(c);
+    dustEls.push({c,x:((i*197)%1240)+20,y0:(i*311)%720,sp:6+(i%7)*3,ph:i*0.7});
+  }
+
+  // ---------- cognitive lattice: concentric hex rings + spokes ----------
+  const latG=$('#lattice');
+  const latEdges=[], latNodes=[];
+  const RINGS=[{r:70,n:6,rot:-Math.PI/2},{r:140,n:12,rot:-Math.PI/2},{r:210,n:18,rot:-Math.PI/2}];
+  const ringPts=RINGS.map((R0)=>{const pts=[];for(let i=0;i<R0.n;i++){const a=R0.rot+i*2*Math.PI/R0.n;
+    pts.push({x:CX+Math.cos(a)*R0.r,y:CY+Math.sin(a)*R0.r*0.62,d:R0.r*0.5+i*0.03});}return pts;});
+  // ring edges
+  ringPts.forEach((pts,ri)=>{ pts.forEach((p,i)=>{ const q=pts[(i+1)%pts.length];
+    const l=el('line',{x1:p.x,y1:p.y,x2:q.x,y2:q.y,stroke:'#57cfe3','stroke-width':'1','opacity':'.5'});
+    latG.appendChild(l); latEdges.push({e:l,t0:0.75+ri*0.42+i*0.012}); }); });
+  // radial spokes between rings
+  for(let ri=0;ri<2;ri++){
+    ringPts[ri].forEach((p,i)=>{
+      const tgt=ringPts[ri+1][Math.round(i*(ringPts[ri+1].length/ringPts[ri].length))%ringPts[ri+1].length];
+      const l=el('line',{x1:p.x,y1:p.y,x2:tgt.x,y2:tgt.y,stroke:'#3f9fb0','stroke-width':'1','opacity':'.32'});
+      latG.appendChild(l); latEdges.push({e:l,t0:1.38+ri*0.5+i*0.02});
+    });
+  }
+  // nodes
+  const coreNode=el('circle',{cx:CX,cy:CY,r:7,fill:'#f2ffff'});
+  latG.appendChild(coreNode); latNodes.push({e:coreNode,t0:0.6,core:true});
+  ringPts.forEach((pts,ri)=>pts.forEach((p,i)=>{
+    const c=el('circle',{cx:p.x,cy:p.y,r:ri===0?4:ri===1?3:2.2,fill:ri===2?'#4fb6c8':'#dcfdff'});
+    latG.appendChild(c); latNodes.push({e:c,t0:0.85+ri*0.45+i*0.02,ri,i});
+    const h=el('circle',{cx:p.x,cy:p.y,r:8,fill:'none',stroke:'#8ff2ff','stroke-width':'1',opacity:'0'});
+    latG.appendChild(h); latNodes[latNodes.length-1].h=h;
+  }));
+
+  // ---------- globe ----------
+  const sphG=$('#sphere');
+  const meridians=[];
+  for(let i=0;i<7;i++){ const e=el('ellipse',{cx:CX,cy:CY,rx:R,ry:R,fill:'none',stroke:'#63d9ec','stroke-width':'1.1',opacity:'.5'});
+    sphG.appendChild(e); meridians.push(e); }
+  const parallels=[];
+  [[-0.62,0.14],[-0.32,0.12],[0,0.10],[0.32,0.12],[0.62,0.14]].forEach(([f,k])=>{
+    const rr=R*Math.sqrt(Math.max(0,1-f*f));
+    const e=el('ellipse',{cx:CX,cy:CY+f*R,rx:rr,ry:rr*k,fill:'none',stroke:'#3d95a6','stroke-width':'1',opacity:'.3'});
+    sphG.appendChild(e); parallels.push(e);
+  });
+  const outer=el('circle',{cx:CX,cy:CY,r:R,fill:'none',stroke:'#8fe9ff','stroke-width':'1.8',opacity:'.9'});
+  const halo=el('circle',{cx:CX,cy:CY,r:R+18,fill:'none',stroke:'#59d4e8','stroke-width':'1',opacity:'.2'});
+  const latRing=el('ellipse',{cx:CX,cy:CY,RX:0,rx:R*1.15,ry:R*0.2,fill:'none',stroke:'#7fe8ff','stroke-width':'1','opacity':'.35',transform:'rotate(-18 '+CX+' '+CY+')'});
+  const innerGlow=el('circle',{cx:CX,cy:CY,r:R*0.92,fill:'url(#haze)',opacity:'.9'});
+  const scanLine=el('rect',{x:CX-R,y:CY-R,width:R*2,height:2,fill:'#bff6ff',opacity:'0'});
+  const scanTrail=el('rect',{x:CX-R,y:CY-R,width:R*2,height:26,fill:'url(#scanTrail)',opacity:'0'});
+  sphG.appendChild(innerGlow);sphG.appendChild(scanTrail);sphG.appendChild(scanLine);
+  sphG.appendChild(halo);sphG.appendChild(latRing);sphG.appendChild(outer);
+
+  // ---------- reasoning traces ----------
+  const reaG=$('#reason');
+  const traces=[];
+  for(let i=0;i<7;i++){
+    if(i===3) continue;
+    const y0=CY+(i-3)*46;
+    const p=el('path',{d:'M'+(CX-250)+' '+y0+' C'+(CX-120)+' '+(CY+(i-3)*120)+' '+(CX+120)+' '+(CY-(i-3)*110)+' '+(CX+250)+' '+y0,
+      fill:'none',stroke:'#b8452f','stroke-width':'1','stroke-linecap':'round',opacity:'.6'});
+    reaG.appendChild(p); traces.push({p,dead:true,i});
+  }
+  const winPath=el('path',{d:'M'+(CX-250)+' '+CY+' L'+(CX+250)+' '+CY,fill:'none',stroke:'#f2ffff','stroke-width':'2.6','stroke-linecap':'round',opacity:'.95'});
+  const winGlow=el('path',{d:winPath.getAttribute('d'),fill:'none',stroke:'#7fe8ff','stroke-width':'10',filter:'url(#glow10)',opacity:'.35'});
+  const winHead=el('circle',{cx:CX-250,cy:CY,r:5,fill:'#ffffff'});
+  reaG.appendChild(winGlow);reaG.appendChild(winPath);reaG.appendChild(winHead);
+
+  // ---------- alignment ----------
+  const alG=$('#align');
+  const arc=el('circle',{cx:CX,cy:CY,r:R+46,fill:'none',stroke:'#a8f4ff','stroke-width':'3','stroke-linecap':'round',transform:'rotate(-90 '+CX+' '+CY+')'});
+  const arc2=el('circle',{cx:CX,cy:CY,r:R+58,fill:'none',stroke:'#3f9fb0','stroke-width':'1','opacity':'.5'});
+  const tick=el('path',{d:'M'+(CX-30)+' '+(CY+10)+' l24 26 l44 -54',fill:'none',stroke:'#e6ffff','stroke-width':'5','stroke-linecap':'round','stroke-linejoin':'round'});
+  alG.appendChild(arc2);alG.appendChild(arc);alG.appendChild(tick);
+
+  // ---------- wordmark ----------
+  const WM=['M207 200 L267 34 L327 200 M231 140 L303 140',
+            'M519.7 56.9 A76 85 0 1 0 519.7 177.1 L519.7 118 L484 118',
+            ];
+  const fillWm=(g,stroke,w)=>{WM.forEach(d=>g.appendChild(el('path',{d,fill:'none',stroke,'stroke-width':w})));};
+  fillWm($('#wmWhite'),'#f4ffff',20);
+  $('#wmWhite').appendChild(el('path',{d:'M582 36 L582 198',fill:'none',stroke:'#ff2d2d','stroke-width':26}));
+  fillWm($('#wmRed'),'#ff2d2d',20);
+  fillWm($('#wmCyan'),'#31e6ff',20);
+  const caption=$('#wordmark');
+  const cap=el('text',{x:CX,y:0,'text-anchor':'middle',fill:'#8fe4f5','font-size':'14',class:'mono'});
+  cap.textContent='通 用 人 工 智 能 · 已 就 位';
+  cap.setAttribute('y','0');
+  caption.appendChild(cap);
+  const cap2=el('text',{x:CX,y:0,'text-anchor':'middle',fill:'#3f8493','font-size':'12',class:'mono'});
+  cap2.textContent='DEEPSEEK HARNESS · 通向 AGI 的过渡';
+  caption.appendChild(cap2);
+
+  // ---------- spectrum + status ----------
+  const specG=$('#spectrum'); const specBars=[];
+  for(let i=0;i<22;i++){
+    const b=el('rect',{x:String(1176-i*9),y:String(690),width:'3',height:'2',fill:i%5===0?'#ff3b30':'#7fe8ff',opacity:'.8'});
+    specG.appendChild(b); specBars.push(b);
+  }
+  const LINES=[['插件装载','挂载',0.55],['运行时连接','握手完成',2.15],['工具接入','注册完成',3.95],['上下文装配','已装配',5.25],['智能体就位','在线',6.95]];
+  const statusG=$('#status');
+  const lines=LINES.map(([k,v,t0],i)=>{
+    const g=el('g',{opacity:'0'});
+    const a=el('text',{x:'104',y:String(556+i*26),fill:'#5cb4c4','font-size':'13',class:'mono'});
+    a.textContent='› '+k;
+    const b=el('text',{x:'344',y:String(556+i*26),fill:'#d6fbff','font-size':'13',class:'mono'});
+    b.textContent=v;
+    g.appendChild(a);g.appendChild(b);statusG.appendChild(g);
+    return {g,t0};
+  });
+
+
+  // ---------- plugin tree (real profile bundles) ----------
+  const PLUGINS=['dsh-base','dsh-web-app','dshmarket','dsh-memory-plugin','dsh-context','dsh-opencodego-usage',
+    'dsh-restart-fab','dsh-better-sidebar','dsh-genui','archify-dsh','dsh-session-actions','dsh-plugin-pin-session',
+    'dsh-catppuccin','dsh-theme-mineradio','dsh-client-ui-task-board','hindsight-coding-agents','dsh-client-ui-skill-explorer',
+    'dsh-pdf-edit','dsh-timeline','dsh-univer-office','dsh-client-ui-git-graph','dsh-cost-meter','billion-context',
+    'dsh-agent-teams','dsh-find-plugin','dsh-im-connect','dsh-550c-boot','dsh-automation'];
+  const plugG=$('#plug'); const plugBg=$('#plugBg'); const plugRows=[];
+  const plugTitle=el('text',{x:'106',y:'200',fill:'#4f9aa8','font-size':'11',class:'mono'});
+  plugTitle.textContent='▍ 插件装载 · PLUGIN TREE';
+  plugG.appendChild(plugTitle);
+  const plugCount=el('text',{x:'372',y:'200',fill:'#7fe8ff','font-size':'11','text-anchor':'end',class:'mono'});
+  plugCount.textContent='0 / 28';
+  plugG.appendChild(plugCount);
+  PLUGINS.forEach((name,i)=>{
+    const col=i%2, row=(i-col)/2;
+    const x=106+col*142, y=220+row*15;
+    const g=el('g',{opacity:'0'});
+    const bar=el('line',{x1:String(x),y1:String(y-4),x2:String(x+6),y2:String(y-4),stroke:'#3fc8dc','stroke-width':'2'});
+    const tx=el('text',{x:String(x+10),y:String(y),fill:'#79c4d2','font-size':'9','class':'mono'});
+    tx.textContent=name.replace(/^dsh-/,'').replace(/^client-ui-/,'ui-').slice(0,22);
+    g.appendChild(bar);g.appendChild(tx);plugG.appendChild(g);
+    plugRows.push({g,i});
+  });
+  const plugFoot=el('text',{x:'106',y:'442',fill:'#2f6d79','font-size':'9.5',class:'mono'});
+  plugFoot.textContent='CORDIS · 一切皆插件 · 零源码改动';
+  plugG.appendChild(plugFoot);
+
+  // ---------- tool bridge ----------
+  const TOOLS=['bash','read','edit','write','glob','grep','skill','subagent','web_fetch','agent_teams'];
+  const toolG=$('#tools'); const toolBg=$('#toolBg'); const toolRows=[];
+  const toolTitle=el('text',{x:'1172',y:'200',fill:'#4f9aa8','font-size':'11','text-anchor':'end',class:'mono'});
+  toolTitle.textContent='工具接入 · TOOL BRIDGE ▍';
+  toolG.appendChild(toolTitle);
+  const toolCount=el('text',{x:'1172',y:'218',fill:'#7fe8ff','font-size':'10','text-anchor':'end',class:'mono'});
+  toolCount.textContent='0 项已注册';
+  toolG.appendChild(toolCount);
+  TOOLS.forEach((name,i)=>{
+    const y=242+i*17;
+    const g=el('g',{opacity:'0'});
+    const tx=el('text',{x:'1172',y:String(y),fill:'#9adde9','font-size':'10.5','text-anchor':'end',class:'mono'});
+    tx.textContent='● '+name;
+    g.appendChild(tx);toolG.appendChild(g);
+    toolRows.push({g,i});
+  });
+  const toolFoot=el('text',{x:'1172',y:'436',fill:'#2f6d79','font-size':'9.5','text-anchor':'end',class:'mono'});
+  toolFoot.textContent='MCP · openviking 已连接';
+  toolG.appendChild(toolFoot);
+
+  // ---------- render ----------
+  function render(t){
+    const lift=ramp(t,0,0.9);
+    $('#gridFine').setAttribute('opacity',String(lift*0.5));
+    $('#gridBg').setAttribute('opacity',String(lift*0.6));
+    bg.setAttribute('opacity',String(lift*0.9));
+    $('#hazeC').setAttribute('opacity',String(lift*0.9*(1-ramp(t,8.8,10.2))));
+    dust.setAttribute('opacity',String(lift*0.85));
+    dustEls.forEach(d=>{
+      const y=((d.y0 - t*d.sp)%720+720)%720;
+      d.c.setAttribute('cx',String(d.x));
+      d.c.setAttribute('cy',String(y));
+      d.c.setAttribute('opacity',String(0.15+0.35*Math.abs(Math.sin(t*0.9+d.ph))));
+    });
+
+    // core dot
+    const dotIn=ramp(t,0.1,0.55), dotOut=1-ramp(t,2.3,2.9);
+    const pulse=1+0.3*Math.sin(t*6.4);
+    $('#dot').setAttribute('opacity',String(dotIn*dotOut));
+    $('#dot').setAttribute('r',String(4+2.5*pulse));
+    $('#dotGlow').setAttribute('opacity',String(0.9*dotIn*dotOut));
+    $('#dotGlow').setAttribute('r',String(90+40*pulse));
+
+    // lattice
+    const latOut=1-ramp(t,2.35,2.95);
+    latG.setAttribute('opacity',String(ramp(t,0.5,0.9)*latOut));
+    latEdges.forEach((o)=>{
+      const p=easeOut(ramp(t,o.t0,o.t0+0.45));
+      o.e.setAttribute('stroke-dasharray','900');
+      o.e.setAttribute('stroke-dashoffset',String(900*(1-p)));
+    });
+    latNodes.forEach((o)=>{
+      const p=ramp(t,o.t0,o.t0+0.3);
+      o.e.setAttribute('opacity',String(p));
+      if(o.h){
+        const k=((t*0.8+o.i*0.17)%1);
+        o.h.setAttribute('opacity',String(p*0.45*(1-k)));
+        o.h.setAttribute('r',String(6+k*12));
+      }
+    });
+
+    // globe
+    const sphIn=ramp(t,2.1,2.7), sphOut=1-ramp(t,6.5,7.0);
+    sphG.setAttribute('opacity',String(sphIn*sphOut));
+    meridians.forEach((e,i)=>{
+      const ph=t*0.55+i*Math.PI/7;
+      const rx=Math.abs(Math.cos(ph))*R;
+      e.setAttribute('rx',String(Math.max(2,rx)));
+      e.setAttribute('opacity',String(0.2+0.55*Math.abs(Math.cos(ph))));
+    });
+    latRing.setAttribute('transform','rotate('+String(-18+t*40)+' '+CX+' '+CY+')');
+    outer.setAttribute('opacity',String(0.9*(0.85+0.15*Math.sin(t*3))));
+    halo.setAttribute('opacity',String(0.2*(1+0.6*Math.sin(t*2.4))));
+    const scanPh=((t-2.1)/1.9)%1;
+    const scanOn=sphIn*(1-ramp(t,6.2,6.6));
+    scanLine.setAttribute('y',String(CY-R+ (R*2)*clamp(scanPh*1.6,0,1)));
+    scanLine.setAttribute('opacity',String(0.55*scanOn*(scanPh<0.63?1:0)));
+    scanTrail.setAttribute('y',String(CY-R+ (R*2)*clamp(scanPh*1.6,0,1)-26));
+    scanTrail.setAttribute('opacity',String(scanOn*(scanPh<0.63?1:0)));
+    sphG.setAttribute('transform','translate('+CX+' '+CY+') scale('+String(0.86+0.14*easeOut(sphIn))+') translate('+(-CX)+' '+(-CY)+')');
+
+    // reasoning
+    const reaIn=ramp(t,3.72,3.92), reaOut=1-ramp(t,5.08,5.5);
+    reaG.setAttribute('opacity',String(reaIn*reaOut));
+    traces.forEach((o)=>{
+      const q=easeOut(ramp(t,3.78+o.i*0.04,4.75+o.i*0.04));
+      o.p.setAttribute('stroke-dasharray','1200');
+      o.p.setAttribute('stroke-dashoffset',String(1200*(1-q)));
+      const die=1-ramp(t,4.75+o.i*0.03,5.35);
+      o.p.setAttribute('opacity',String(0.6*die));
+    });
+    const wq=easeIO(ramp(t,3.8,5.25));
+    const WL=500;
+    winPath.setAttribute('stroke-dasharray',String(WL));
+    winPath.setAttribute('stroke-dashoffset',String(WL*(1-wq)));
+    winGlow.setAttribute('stroke-dasharray',String(WL));
+    winGlow.setAttribute('stroke-dashoffset',String(WL*(1-wq)));
+    winHead.setAttribute('cx',String(CX-250+780*wq));
+    winHead.setAttribute('opacity',String(wq>0.02&&wq<0.995?1:0));
+
+    // alignment
+    const alIn=ramp(t,5.2,5.4), alOut=1-ramp(t,6.45,6.9);
+    alG.setAttribute('opacity',String(alIn*alOut));
+    const circ=2*Math.PI*(R+46);
+    const sq=easeIO(ramp(t,5.2,6.1));
+    arc.setAttribute('stroke-dasharray',String(circ*0.72)+' '+String(circ));
+    arc.setAttribute('stroke-dashoffset',String(circ*0.72*(1-sq)));
+    arc.setAttribute('transform','rotate('+String(-90+t*26)+' '+CX+' '+CY+')');
+    const tq=easeOut(ramp(t,5.85,6.35));
+    tick.setAttribute('stroke-dasharray','120');
+    tick.setAttribute('stroke-dashoffset',String(120*(1-tq)));
+
+    // wordmark
+    const wmIn=ramp(t,6.8,7.1), wmOut=1-ramp(t,9.2,10.2);
+    $('#wordmark').setAttribute('opacity',String(wmIn*wmOut));
+    const conv=1-easeOut(ramp(t,6.8,7.45));
+    const sc=0.96+0.04*easeOut(ramp(t,6.8,7.3));
+    const S=1.42, TX=640-402.5*S, TY=352-117*S;
+    const base='translate('+TX+' '+TY+') scale('+S.toFixed(3)+')';
+    $('#wmWhite').setAttribute('transform',base);
+    $('#wmRed').setAttribute('transform','translate('+String(TX+14*conv)+' '+String(TY+5*conv)+') scale('+S.toFixed(3)+')');
+    $('#wmCyan').setAttribute('transform','translate('+String(TX-14*conv)+' '+String(TY-5*conv)+') scale('+S.toFixed(3)+')');
+    $('#wmRed').setAttribute('opacity',String(0.02+0.5*conv));
+    $('#wmCyan').setAttribute('opacity',String(0.02+0.45*conv));
+    cap.setAttribute('opacity',String(ramp(t,7.35,7.85)*wmOut));
+    cap.setAttribute('y',String(536+12*(1-easeOut(ramp(t,7.35,7.85)))));
+    cap2.setAttribute('opacity',String(ramp(t,7.7,8.2)*wmOut));
+    cap2.setAttribute('y',String(562+10*(1-easeOut(ramp(t,7.7,8.2)))));
+    const specEl=document.getElementById('spec');
+    if(specEl) specEl.setAttribute('opacity',String(0.55*ramp(t,1.0,2.2)*(1-0.4*ramp(t,9.4,9.9))));
+
+    // streak pass across wordmark
+    const st=ramp(t,7.45,8.05);
+    $('#streakBar').setAttribute('opacity',String(st>0&&st<1?0.85*(1-Math.abs(st-0.5)*1.4):0));
+    $('#streakBar').setAttribute('x',String(-600+st*1900));
+
+
+    // plugin tree + tool bridge
+    const panOut=1-ramp(t,6.15,6.75);
+    const panIn=ramp(t,0.75,1.05);
+    plugG.setAttribute('opacity',String(panIn*panOut));
+    toolG.setAttribute('opacity',String(ramp(t,3.85,4.15)*panOut));
+    plugBg.setAttribute('opacity',String(0.78*panIn*panOut));
+    toolBg.setAttribute('opacity',String(0.78*ramp(t,3.85,4.15)*panOut));
+    plugTitle.setAttribute('opacity',String(panIn));
+    plugFoot.setAttribute('opacity',String(ramp(t,2.5,2.9)*panOut*0.9));
+    plugRows.forEach((o)=>{ const a=0.95+o.i*0.05; o.g.setAttribute('opacity',String(ramp(t,a,a+0.16))); });
+    const pc=clamp(Math.floor((t-0.95)/0.05),0,28);
+    plugCount.textContent=pc+' / 28';
+    toolRows.forEach((o)=>{ const a=3.95+o.i*0.07; o.g.setAttribute('opacity',String(ramp(t,a,a+0.16))); });
+    const tc=clamp(Math.floor((t-3.95)/0.07),0,10);
+    toolCount.textContent=tc+' 项已注册';
+    toolFoot.setAttribute('opacity',String(ramp(t,4.9,5.3)*panOut*0.9));
+    // hud
+    $('#hud').setAttribute('opacity',String(ramp(t,0.25,0.75)*(1-ramp(t,9.3,10.2))));
+    $('#clock').textContent='T+00:00:'+String(Math.floor(t)).padStart(2,'0');
+    specBars.forEach((b,i)=>{
+      const h=2+38*Math.abs(Math.sin(t*3.1+i*0.6)*Math.sin(t*1.3+i*0.21));
+      b.setAttribute('y',String(688-h));
+      b.setAttribute('height',String(h));
+    });
+    lines.forEach((l,i)=>{
+      const p=ramp(t,l.t0,l.t0+0.3);
+      l.g.setAttribute('opacity',String(p));
+      const full=LINES[i][1];
+      l.g.childNodes[1].textContent=p>0?full.slice(0,Math.max(1,Math.ceil(full.length*p))):'';
+    });
+
+    // progress
+    const barT=ramp(t,0.3,9.2);
+    $('#bar').setAttribute('opacity',String(ramp(t,0.3,0.6)*(1-ramp(t,9.5,10.3))));
+    $('#bar').setAttribute('width',String(1088*barT));
+  }
+
+  const freeze=new URLSearchParams(location.search).get('t');
+  if(freeze!==null && freeze!==''){ render(parseFloat(freeze)); }
+  else {
+    const t0=performance.now();
+    const loop=(now)=>{ const t=(now-t0)/1000; render(t); if(t<10.6) requestAnimationFrame(loop); };
+    requestAnimationFrame(loop);
+    try{ const a=document.getElementById('au'); if(a){ a.volume=0.9; a.play().catch(()=>{}); } }catch(e){}
+    addEventListener('pointerdown',()=>{ const a=document.getElementById('au'); if(a&&a.paused) a.play().catch(()=>{}); },{once:true});
+  }
+  window.__render=render;
+})();
+</script>
+<audio id="au" src="audio/agi-boot.mp3" preload="auto"></audio>
+</body></html>

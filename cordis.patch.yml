@@ -1,0 +1,4 @@
+# 把插件挂进 profile 的 cordis 图。id 必须与 lib/index.js 的 exports.name 一致。
+- insert:
+    - id: agi-splash
+      name: dsh-for-agi-splash
