@@ -21,11 +21,11 @@
 | npm 包名 `dsh-for-agi-splash` 未被占用（registry 404） | ✅ |
 | `npm pack` 体检：7 文件 / 341 kB / 零运行期依赖 | ✅ |
 | Node v24.22.0 + npm 11.19.1 + gh 2.102.0（装在 `~/.local`，无 sudo） | ✅ |
-| npm 登录 | ❌ `npm login --auth-type=web` |
-| GitHub 登录 / 仓库 | ❌ `gh auth login --web`（仓库还要等满 1 天） |
-| awesome PR | ❌ 等仓库满 1 天 |
+| npm 登录 | ⏳ 待授权：后台已开 `npm login --auth-type=web` |
+| GitHub 登录 / 仓库 | ✅ Minksgo；仓库已建并推 main + tag v0.2.0 |
+| awesome PR | ⏳ 等仓库满 1 天（脚本会自动跳过并提示 `--pr-only`） |
 
-所有缺的东西都已经装好，只差**用你的账号授权**这两步。
+GitHub 这一步已经完成（2026-10-18 14:38），现在只差 **npm 授权**。
 
 ```bash
 export PATH="$HOME/.local/bin:$PATH"

@@ -21,6 +21,14 @@
   "author": {
     "name": "MINks"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Minksgo/dsh-for-agi-splash.git"
+  },
+  "homepage": "https://github.com/Minksgo/dsh-for-agi-splash#readme",
+  "bugs": {
+    "url": "https://github.com/Minksgo/dsh-for-agi-splash/issues"
+  },
   "keywords": [
     "dsh",
     "dsh-plugin",

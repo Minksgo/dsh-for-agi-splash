@@ -26,7 +26,7 @@ npx @deepseek-ai/dsh plugin --profile desktop add dsh-for-agi-splash
 从仓库源码安装：
 
 ```sh
-npx @deepseek-ai/dsh plugin --profile desktop add github:<你的账号>/DSH-for-AGI开屏动画
+npx @deepseek-ai/dsh plugin --profile desktop add github:Minksgo/dsh-for-agi-splash
 ```
 
 装完**重启客户端**生效。片头只播一次，播完自动淡出；之后去 **设置 → 开屏动画** 就能开关、调音量、改提示语、重播。
