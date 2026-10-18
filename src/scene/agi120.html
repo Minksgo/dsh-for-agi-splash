@@ -108,6 +108,10 @@
     </g>
 
     <g id="reason" opacity="0"></g>
+    <g id="reasonCore" opacity="0">
+      <circle id="reasonHalo" cx="640" cy="360" r="44" fill="url(#coreGlow)" opacity=".85"/>
+      <g id="reasonRings"></g>
+    </g>
 
     <g id="wordmark" opacity="0">
       <g id="wmRed" filter="url(#glow4)"></g>
@@ -378,6 +382,11 @@
 
   // ---------- reasoning sparks ----------
   const reasonG=$('#reason'); const sparks=[];
+  const rrG=$('#reasonRings'); const rRings=[];
+  for(let i=0;i<5;i++){
+    const c=el('circle',{cx:String(CX),cy:String(CY),r:'0',fill:'none',stroke:'#7fe8ff','stroke-width':'0.8',opacity:'0','stroke-dasharray':'7 13'});
+    rrG.appendChild(c); rRings.push(c);
+  }
   for(let i=0;i<110;i++){
     const c=el('circle',{cx:'0',cy:'0',r:i%9===0?'2':'1.2',fill:i%5===0?'#ff5a3c':'#d9feff',opacity:'0'});
     reasonG.appendChild(c);
@@ -643,6 +652,16 @@
     /* ---------- reasoning chain ---------- */
     const reIn=ramp(t,100.1,100.9), reOut=1-ramp(t,108.1,108.4);
     $('#reason').setAttribute('opacity',String(reIn*reOut));
+    $('#reasonCore').setAttribute('opacity',String(reIn*reOut));
+    const rp=easeIO(ramp(t,100.2,107.8));
+    rRings.forEach((c,i)=>{
+      const ph=clamp(rp*1.3-i*0.14,0,1);
+      c.setAttribute('r',String((286*(1-ph)+24).toFixed(1)));
+      c.setAttribute('opacity',String((0.6*(1-ph)*reIn*reOut).toFixed(3)));
+      c.setAttribute('stroke-dashoffset',String(((t*70+i*40)%20).toFixed(1)));
+    });
+    $('#reasonHalo').setAttribute('r',String((40+9*Math.sin(t*7.2)).toFixed(1)));
+    $('#reasonHalo').setAttribute('opacity',String((0.55+0.3*Math.sin(t*9)).toFixed(3)));
     if(reIn*reOut>0.002){
       const q0=easeIO(ramp(t,100.4,106.6));
       sparks.forEach((s,i)=>{
@@ -724,12 +743,15 @@
     $('#shock').setAttribute('stroke-width',String(0.6+2.4*(1-shockP)));
 
     const cap1=$('#cap1'), cap2=$('#cap2'), cap3=$('#cap3');
+    cap1.textContent='通用人工智能 · 已就位';
+    cap2.textContent='DEEPSEEK HARNESS · 通向 AGI 的过渡';
+    cap3.textContent='一切问题 · 皆有解';
     cap1.setAttribute('opacity',String(ramp(t,109.6,110.2)));
     cap1.setAttribute('y',String(540+12*(1-easeOut(ramp(t,109.6,110.2)))));
     cap2.setAttribute('opacity',String(ramp(t,111.3,111.9)));
     cap2.setAttribute('y',String(572+10*(1-easeOut(ramp(t,111.3,111.9)))));
-    cap3.setAttribute('opacity',String(ramp(t,114.0,114.7)));
-    cap3.setAttribute('y',String(614+8*(1-easeOut(ramp(t,114.0,114.7)))));
+    cap3.setAttribute('opacity',String(0.92*ramp(t,115.0,115.7)));
+    cap3.setAttribute('y',String(614+8*(1-easeOut(ramp(t,115.0,115.7)))));
 
     const br=1+0.006*Math.sin((t-110)*1.3);
     if(t>110){ $('#wordmark').setAttribute('transform','translate(640 360) scale('+br.toFixed(4)+') translate(-640 -360)'); }
