@@ -5,14 +5,17 @@
  * Sources of truth:
  *   src/scene/agi.html     9.9 s 精简版（五幕 DSH 启动链）
  *   src/scene/agi30.html   30 s 剧场版（冷启动 → 自检 → 认知网络 → 工具桥接 → 装配 → 就位 → 交棒）
+ *   src/scene/agi120.html  120 s 电影版（八幕：冷启动 → 自检 → 认知网络 → 世界模型 → 工具桥接 → 上下文装配 → 推理链 → 就位）
  *   src/client.template.js the plugin shim (shadow root, 选版, skip, teardown)
  *   assets/agi-boot.mp3    9.9 s narration + sound design
  *   assets/agi-boot-30.mp3 30 s narration + sound design（scripts/build-audio-30.mjs 生成）
+ *   assets/agi-boot-120.mp3 120 s narration + sound design（scripts/build-audio-120.mjs 生成）
  *
  * Outputs:
  *   lib/client.js          shadow-root overlay with both scenes and both audio tracks inlined
  *   preview/splash.html    9.9 s scene as a plain page
  *   preview/splash-30.html 30 s scene as a plain page
+ *   preview/splash-120.html 120 s scene as a plain page
  *
  * Deterministic: same inputs, byte-identical outputs. No network, no dependencies.
  */
@@ -62,9 +65,11 @@ const short = compileScene('src/scene/agi.html', 'agiScene', [
   ['(t,8.8,10.2)', '(t,9.0,9.9)'],
 ])
 const long = compileScene('src/scene/agi30.html', 'agiScene30', [])
+const cinema = compileScene('src/scene/agi120.html', 'agiScene120', [])
 
 const audioShort = readFileSync(resolve(ROOT, 'assets/agi-boot.mp3')).toString('base64')
 const audioLong = readFileSync(resolve(ROOT, 'assets/agi-boot-30.mp3')).toString('base64')
+const audioCinema = readFileSync(resolve(ROOT, 'assets/agi-boot-120.mp3')).toString('base64')
 const version = JSON.parse(read('package.json')).version
 
 const NSHead = (ns) => ns.split('\n').filter((line) => !line.includes('const $=')).join('\n')
@@ -94,21 +99,22 @@ function sceneFn(name, compiled, ms) {
 }
 
 const playBoot = [
-  '\t\t/* ===== 开屏：精简 9.9 s / 剧场 30 s，两套场景各自独立时钟 ===== */',
+  '\t\t/* ===== 开屏：精简 9.9 s / 剧场 30 s / 电影 120 s，三套场景各自独立时钟 ===== */',
   sceneFn('bootShort', short, 9900),
   sceneFn('bootLong', long, 30000),
+  sceneFn('bootCinema', cinema, 120000),
   '\t\tfunction playBoot(cut) {',
   "\t\t\tconst boot = stage.querySelector('#boot');",
   '\t\t\tif (boot === null) return 0;',
   "\t\t\tconst long = cut === 'long';",
-  "\t\t\tconst root = boot.querySelector(long ? '#cutLong' : '#cutShort');",
+  "\t\t\tconst root = boot.querySelector(cut === 'cinema' ? '#cutCinema' : long ? '#cutLong' : '#cutShort');",
   '\t\t\tif (root === null) return 0;',
   "\t\t\troot.classList.add('on');",
-  '\t\t\tconst total = long ? bootLong(root) : bootShort(root);',
+  "\t\t\tconst total = cut === 'cinema' ? bootCinema(root) : long ? bootLong(root) : bootShort(root);",
   "\t\t\tconst au = stage.querySelector('#agiAudio');",
   '\t\t\tif (au !== null) {',
-  "\t\t\t\tau.src = long ? AUDIO_MP3_30 : AUDIO_MP3;",
-  '\t\t\t\tau.volume = (typeof globalThis.__agiSplashVolume === "function") ? globalThis.__agiSplashVolume() : 0.9;',
+  "\t\t\tau.src = cut === 'cinema' ? AUDIO_MP3_120 : long ? AUDIO_MP3_30 : AUDIO_MP3;",
+  '\t\t\tau.volume = (typeof globalThis.__agiSplashVolume === "function") ? globalThis.__agiSplashVolume() : 0.9;',
   '\t\t\t\tconst kick = () => {',
   '\t\t\t\t\ttry {',
   '\t\t\t\t\t\tconst played = au.play();',
@@ -128,9 +134,10 @@ const playBoot = [
 ].join('\n')
 
 const assets = [
-  '\t\tconst BOOT_SVG = ' + JSON.stringify('<div id="cutShort" class="agi-cut">' + short.svg + '</div>' + '<div id="cutLong" class="agi-cut">' + long.svg + '</div>') + ';',
+  '\t\tconst BOOT_SVG = ' + JSON.stringify('<div id="cutShort" class="agi-cut">' + short.svg + '</div>' + '<div id="cutLong" class="agi-cut">' + long.svg + '</div>' + '<div id="cutCinema" class="agi-cut">' + cinema.svg + '</div>') + ';',
   '\t\tconst AUDIO_MP3 = "data:audio/mpeg;base64,' + audioShort + '";',
   '\t\tconst AUDIO_MP3_30 = "data:audio/mpeg;base64,' + audioLong + '";',
+  '\t\tconst AUDIO_MP3_120 = "data:audio/mpeg;base64,' + audioCinema + '";',
   '\t\tconst PLUGIN_VERSION = ' + JSON.stringify(version) + ';',
 ].join('\n')
 
@@ -190,3 +197,8 @@ writeFileSync(
   previewFor(long, audioLong, '30', '点击任意处从头重播 · 地址栏加 ?t=12 冻结在某一秒'),
 )
 console.log('preview/splash-30.html written')
+writeFileSync(
+  resolve(ROOT, 'preview/splash-120.html'),
+  previewFor(cinema, audioCinema, '120', '点击任意处从头重播 · 地址栏加 ?t=61 冻结在某一秒'),
+)
+console.log('preview/splash-120.html written')

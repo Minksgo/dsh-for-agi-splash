@@ -1,6 +1,6 @@
 {
   "name": "dsh-for-agi-splash",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "DSH-for-AGI 开屏动画：9.9 秒精简版 + 30 秒剧场版。剧场版走完冷启动 → 自检 → 认知网络 → 工具桥接 → 上下文装配 → AGI 就位 → 交棒，装完或升级后播一次，之后自动回精简版；中文旁白 + 全片音效，点击或 Esc 随时跳过。",
   "type": "module",
   "main": "./lib/index.js",

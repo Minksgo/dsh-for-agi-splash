@@ -1,0 +1,758 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<style>
+  html,body{margin:0;height:100%;background:#000407;overflow:hidden}
+  #stage{position:fixed;inset:0;width:100vw;height:100vh;display:block}
+  text{font-family:"PingFang SC","SF Mono",Menlo,Monaco,monospace}
+  .mono{letter-spacing:.18em}
+</style></head>
+<body>
+<svg id="stage" viewBox="0 0 1280 720" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <pattern id="grid" width="80" height="80" patternUnits="userSpaceOnUse">
+      <path d="M80 0H0V80" fill="none" stroke="#13414c" stroke-width="1" opacity=".55"/>
+    </pattern>
+    <pattern id="fine" width="16" height="16" patternUnits="userSpaceOnUse">
+      <path d="M16 0H0V16" fill="none" stroke="#0d3038" stroke-width="1" opacity=".5"/>
+    </pattern>
+    <pattern id="scan" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="1" fill="#8fe9ff" opacity=".07"/>
+    </pattern>
+    <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#e8feff" stop-opacity="1"/>
+      <stop offset="22%" stop-color="#6fe3f7" stop-opacity=".55"/>
+      <stop offset="100%" stop-color="#59dcf2" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="haze" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#2ea7bd" stop-opacity=".22"/>
+      <stop offset="60%" stop-color="#1b7c8d" stop-opacity=".08"/>
+      <stop offset="100%" stop-color="#2ea7bd" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="vignette" cx="50%" cy="50%" r="62%">
+      <stop offset="52%" stop-color="#000407" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000407" stop-opacity=".9"/>
+    </radialGradient>
+    <radialGradient id="tunnelGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#d9feff" stop-opacity=".85"/>
+      <stop offset="30%" stop-color="#31cfe8" stop-opacity=".28"/>
+      <stop offset="100%" stop-color="#31cfe8" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="streak" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#9deeff" stop-opacity="0"/>
+      <stop offset="45%" stop-color="#d9feff" stop-opacity=".9"/>
+      <stop offset="100%" stop-color="#9deeff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="scanTrail" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8fe9ff" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#bff6ff" stop-opacity=".22"/>
+    </linearGradient>
+    <linearGradient id="copper" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#b8452f" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#ff7a54" stop-opacity=".9"/>
+    </linearGradient>
+    <filter id="glow4"><feGaussianBlur stdDeviation="4"/></filter>
+    <filter id="glow10"><feGaussianBlur stdDeviation="10"/></filter>
+    <filter id="glow24"><feGaussianBlur stdDeviation="24"/></filter>
+  </defs>
+
+  <rect width="1280" height="720" fill="#000407"/>
+
+  <g id="world">
+    <g id="floor" opacity="0">
+      <g id="floorLines"></g>
+    </g>
+    <g id="stars" opacity="0"></g>
+    <g id="brackets" opacity="0"></g>
+    <rect id="gridFine" width="1280" height="720" fill="url(#fine)" opacity="0"/>
+    <rect id="gridBg" width="1280" height="720" fill="url(#grid)" opacity="0"/>
+    <circle id="hazeC" cx="640" cy="360" r="470" fill="url(#haze)" opacity="0"/>
+    <rect width="1280" height="720" fill="url(#scan)" opacity=".4"/>
+
+    <g id="bootDump" opacity="0"></g>
+    <g id="selfTest" opacity="0"></g>
+    <g id="plugPanel" opacity="0"></g>
+
+    <circle id="seedGlow" cx="640" cy="360" r="130" fill="url(#coreGlow)" opacity="0"/>
+    <circle id="seed" cx="640" cy="360" r="3" fill="#f0ffff" opacity="0"/>
+
+    <g id="ringScan" opacity="0">
+      <circle id="scanArc" cx="640" cy="360" r="168" fill="none" stroke="#7fe8ff" stroke-width="1.6"/>
+      <circle id="scanArc2" cx="640" cy="360" r="214" fill="none" stroke="#3f9fb0" stroke-width="1" opacity=".5"/>
+      <rect id="scanBar" x="420" y="359" width="440" height="2" fill="#bff6ff" opacity="0"/>
+      <rect id="scanBarTrail" x="420" y="335" width="440" height="24" fill="url(#scanTrail)" opacity="0"/>
+    </g>
+
+    <g id="warn" opacity="0">
+      <rect x="96" y="404" width="330" height="26" fill="#1a0a0c" opacity=".7" stroke="#7a1f24" stroke-width="1"/>
+      <text id="warnTx" x="106" y="422" fill="#ff6a5c" font-size="10.5" class="mono">ANOMALY · 自检偏差 0.07% …</text>
+    </g>
+
+    <g id="lattice" opacity="0"></g>
+
+    <g id="globe" opacity="0">
+      <circle id="globeHalo" cx="640" cy="360" r="244" fill="url(#haze)" opacity=".9"/>
+      <g id="globeLines"></g>
+      <circle id="globeOuter" cx="640" cy="360" r="214" fill="none" stroke="#8fe9ff" stroke-width="1.6" opacity=".85"/>
+      <circle id="globeHalo2" cx="640" cy="360" r="232" fill="none" stroke="#59d4e8" stroke-width="1" opacity=".22"/>
+    </g>
+    <g id="orbits" opacity="0"></g>
+    <g id="arcs" opacity="0"></g>
+
+    <g id="toolTraces" opacity="0"></g>
+    <g id="toolPanel" opacity="0"></g>
+
+    <g id="tunnel" opacity="0">
+      <circle id="tunnelCore" cx="640" cy="360" r="90" fill="url(#tunnelGlow)" opacity=".9"/>
+      <g id="tunnelRings"></g>
+      <g id="tunnelStreaks"></g>
+    </g>
+
+    <g id="reason" opacity="0"></g>
+
+    <g id="wordmark" opacity="0">
+      <g id="wmRed" filter="url(#glow4)"></g>
+      <g id="wmCyan" filter="url(#glow4)"></g>
+      <g id="wmWhite"></g>
+      <text id="cap1" x="640" y="540" text-anchor="middle" fill="#8fe4f5" font-size="14" class="mono"></text>
+      <text id="cap2" x="640" y="572" text-anchor="middle" fill="#3f8493" font-size="12" class="mono"></text>
+      <text id="cap3" x="640" y="616" text-anchor="middle" fill="#a8f4ff" font-size="15" class="mono"></text>
+    </g>
+    <rect id="streakBar" x="-600" y="353" width="600" height="8" fill="url(#streak)" opacity="0" style="mix-blend-mode:screen"/>
+    <circle id="shock" cx="640" cy="360" r="0" fill="none" stroke="#d9feff" stroke-width="2" opacity="0"/>
+    <rect id="gateLine" x="640" y="359" width="0" height="2" fill="#d9feff" opacity="0"/>
+
+    <rect id="scanlines" width="1280" height="720" fill="url(#scan)" opacity="0"/>
+    <rect id="blackout" width="1280" height="720" fill="#000407" opacity="0"/>
+    <rect id="flash" width="1280" height="720" fill="#eaffff" opacity="0"/>
+    <rect width="1280" height="720" fill="url(#vignette)" opacity=".6"/>
+  </g>
+
+  <g id="hud" opacity="0">
+    <line x1="64" y1="92" x2="1216" y2="92" stroke="#2b7d8c" stroke-width="1" opacity=".4"/>
+    <line x1="64" y1="700" x2="1216" y2="700" stroke="#2b7d8c" stroke-width="1" opacity=".4"/>
+    <text x="72" y="52" fill="#8fe4f5" font-size="15" font-weight="600" class="mono">AGI</text>
+    <text x="120" y="52" fill="#4f9aa8" font-size="12" class="mono">通用人工智能 · 启动序列</text>
+    <text id="clock" x="1208" y="52" fill="#4d8e9c" font-size="12" text-anchor="end" class="mono">T+00:00:00</text>
+    <text x="1208" y="74" fill="#2f6d79" font-size="11" text-anchor="end" class="mono">DSH 内核 0.2.0-rc.2 · 插件 28 · MIT</text>
+    <text id="telL" x="72" y="120" fill="#2f6d79" font-size="9" class="mono">CH 07 · 60 FPS</text>
+    <text id="telR" x="1208" y="120" fill="#2f6d79" font-size="9" text-anchor="end" class="mono">NET · LOCAL</text>
+    <text id="actLabel" x="72" y="678" fill="#4f9aa8" font-size="11" class="mono"></text>
+    <text id="caption" x="640" y="642" text-anchor="middle" fill="#7fd8e8" font-size="13" class="mono" opacity="0"></text>
+    <g id="status"></g>
+    <g id="spectrum"></g>
+    <rect id="bar" x="0" y="712" width="0" height="2" fill="#7fe8ff" opacity="0"/>
+  </g>
+</svg>
+
+<script>
+(function(){
+  const NS='http://www.w3.org/2000/svg';
+  const $=(s)=>document.querySelector(s);
+  const el=(n,a)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);return e;};
+  const CX=640, CY=360, R=214;
+  const TAU=Math.PI*2;
+  const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+  const ramp=(t,a,b)=>clamp((t-a)/(b-a),0,1);
+  const easeOut=(x)=>1-Math.pow(1-x,3);
+  const easeIO=(x)=>x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2;
+  const easeBack=(x)=>{const c=1.70158;return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2);};
+
+  // ---------- corner brackets ----------
+
+  const bg=$('#brackets');
+  const M=64, L=30;
+  [[M,M,1,1],[1280-M,M,-1,1],[M,720-M,1,-1],[1280-M,720-M,-1,-1]].forEach(([x,y,sx,sy])=>{
+    bg.appendChild(el('path',{d:'M'+x+' '+(y+L*sy)+' L'+x+' '+y+' L'+(x+L*sx)+' '+y,
+      fill:'none',stroke:'#5fd0e2','stroke-width':'1.4',opacity:'.55'}));
+  });
+  // tick marks along the top edge
+  for(let i=0;i<32;i++){
+    const x=112+i*34;
+    bg.appendChild(el('line',{x1:String(x),y1:'88',x2:String(x),y2:String(i%4===0?80:84),
+      stroke:'#2f7d8c','stroke-width':'1',opacity:'.55'}));
+  }
+
+  // ---------- perspective floor ----------
+  const floorG=$('#floorLines');
+  for(let i=0;i<26;i++){
+    const x2=640+(i-12.5)*150;
+    floorG.appendChild(el('line',{x1:'640',y1:'362',x2:String(x2),y2:'720',stroke:'#15505c','stroke-width':'1','opacity':'.5'}));
+  }
+  for(let k=1;k<=15;k++){
+    const y=360+360*Math.pow(k/15,2.3);
+    floorG.appendChild(el('line',{x1:'0',y1:String(y),x2:'1280',y2:String(y),stroke:'#15505c','stroke-width':'1','opacity':String(0.14+k*0.02)}));
+  }
+
+  // ---------- starfield (3D, depth-projected each frame) ----------
+  const starG=$('#stars');
+  const stars=[];
+  for(let i=0;i<230;i++){
+    const c=el('circle',{cx:'0',cy:'0',r:'1',fill:'#9ceeff',opacity:'0'});
+    starG.appendChild(c);
+    stars.push({c,x:((i*487)%2400)-1200,y:((i*331)%1600)-800,z:120+((i*271)%1300),sp:0.5+(i%9)*0.12});
+  }
+
+  // ---------- boot dump ----------
+  const DUMP=[
+    'DSH-550C / BIOS 2.14.07','CPU  MEMORY CHECK ........ 65536 MB OK',
+    'PCIe x16 LANE 0-15 ........ OK','NVMe 0 : 2.0 TB ........... OK',
+    'ENTROPY POOL .............. 4096 bit','KERNEL dsh 0.2.0-rc.2 ..... LOADED',
+    'PLUGIN GRAPH .............. 28 NODES','CORDIS RUNTIME ............ READY',
+    'SERVICE SLOTS ............. 96 / 96','TOOL BRIDGE ............... 10 TOOLS',
+    'CONTEXT STORE ............. MOUNTED','MCP openviking ............ LINKED',
+    'POLICY ENGINE ............. STRICT','SANDBOX ................... ENFORCED',
+    'AGENT RUNTIME ............. STANDBY','TELEMETRY ................. LOCAL ONLY',
+  ];
+  const dumpG=$('#bootDump'); const dumpLines=[];
+  DUMP.forEach((text,i)=>{
+    const tx=el('text',{x:'76',y:String(146+i*17),fill:i%4===0?'#6fc8da':'#3d8b9a','font-size':'9.5','class':'mono'});
+    tx.textContent=''; dumpG.appendChild(tx);
+    dumpLines.push({tx,full:text,t0:2.5+i*0.17});
+  });
+
+  // ---------- self test ----------
+  const TESTS=[
+    ['内核完整性','CRC32 0x5A3F · 通过',8.0],
+    ['插件图','28 / 28 挂载完成',9.2],
+    ['运行时握手','2.4 ms · 已连接',10.4],
+    ['工具桥','10 项注册完成',11.4],
+    ['上下文','配额 96% · 已装配',12.2],
+    ['策略沙箱','strict · 已生效',13.0],
+  ];
+  const testG=$('#selfTest'); const testRows=[];
+  TESTS.forEach(([k,v,t0],i)=>{
+    const g=el('g',{opacity:'0'});
+    const a=el('text',{x:'76',y:String(238+i*22),fill:'#4f9aa8','font-size':'10.5','class':'mono'});
+    a.textContent='▸ '+k;
+    const b=el('text',{x:'204',y:String(238+i*22),fill:'#9adde9','font-size':'10.5','class':'mono'});
+    b.textContent='';
+    g.appendChild(a);g.appendChild(b);testG.appendChild(g);
+    testRows.push({g,b,full:v,t0});
+  });
+
+  // ---------- plugin panel ----------
+  const PLUGINS=['dsh-base','dsh-web-app','dshmarket','dsh-memory-plugin','dsh-context','dsh-opencodego-usage',
+    'dsh-restart-fab','dsh-better-sidebar','dsh-genui','archify-dsh','dsh-session-actions','dsh-plugin-pin-session',
+    'dsh-catppuccin','dsh-theme-mineradio','dsh-client-ui-task-board','hindsight-coding-agents','dsh-client-ui-skill-explorer',
+    'dsh-pdf-edit','dsh-timeline','dsh-univer-office','dsh-client-ui-git-graph','dsh-cost-meter','billion-context',
+    'dsh-agent-teams','dsh-find-plugin','dsh-im-connect','dsh-550c-boot','dsh-automation'];
+  const plugG=$('#plugPanel'); const plugRows=[];
+  plugG.appendChild(el('rect',{x:'872',y:'150',width:'312',height:'330',fill:'#000407',opacity:'.84',stroke:'#12414b','stroke-width':'1'}));
+  const plugTitle=el('text',{x:'886',y:'174',fill:'#4f9aa8','font-size':'11','class':'mono'});
+  plugTitle.textContent='▍ 插件装载 · PLUGIN TREE';
+  plugG.appendChild(plugTitle);
+  const plugCount=el('text',{x:'1168',y:'174',fill:'#7fe8ff','font-size':'11','text-anchor':'end','class':'mono'});
+  plugCount.textContent='0 / 28';
+  plugG.appendChild(plugCount);
+  PLUGINS.forEach((name,i)=>{
+    const col=i%2, row=(i-col)/2;
+    const x=886+col*150, y=196+row*17;
+    const g=el('g',{opacity:'0'});
+    g.appendChild(el('line',{x1:String(x),y1:String(y-4),x2:String(x+5),y2:String(y-4),stroke:'#3fc8dc','stroke-width':'2'}));
+    const tx=el('text',{x:String(x+9),y:String(y),fill:'#79c4d2','font-size':'8.8','class':'mono'});
+    tx.textContent=name.replace(/^dsh-/,'').replace(/^client-ui-/,'ui-').slice(0,22);
+    g.appendChild(tx);plugG.appendChild(g);
+    plugRows.push({g,i});
+  });
+  const plugFoot=el('text',{x:'886',y:'462',fill:'#2f6d79','font-size':'9','class':'mono'});
+  plugFoot.textContent='CORDIS · 一切皆插件 · 零源码改动';
+  plugG.appendChild(plugFoot);
+
+  // ---------- cognitive lattice (3D) ----------
+  const latG=$('#lattice');
+  const LAT_N=92, latPts=[];
+  for(let i=0;i<LAT_N;i++){
+    const y=1-(i/(LAT_N-1))*2;
+    const r=Math.sqrt(Math.max(0,1-y*y));
+    const th=i*2.399963;
+    latPts.push([Math.cos(th)*r,y,Math.sin(th)*r]);
+  }
+  const latEdges=[];
+  for(let i=0;i<LAT_N;i++)for(let j=i+1;j<LAT_N;j++){
+    const a=latPts[i],b=latPts[j];
+    const dot=a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+    if(dot>0.855){
+      const l=el('line',{x1:'0',y1:'0',x2:'0',y2:'0',stroke:'#3fb9cf','stroke-width':'1',opacity:'0'});
+      latG.appendChild(l);latEdges.push({e:l,i,j});
+    }
+  }
+  const latNodes=[];
+  latPts.forEach((p,i)=>{
+    const c=el('circle',{cx:'0',cy:'0',r:i%7===0?'3.4':'2.2',fill:i%11===0?'#bff6ff':'#5fd6ea',opacity:'0'});
+    latG.appendChild(c);latNodes.push({e:c,p});
+  });
+
+  // ---------- globe (3D wireframe) ----------
+  const globeG=$('#globeLines'); const globeLines=[];
+  function sphere(lat,lon){ return [Math.cos(lat)*Math.cos(lon), Math.sin(lat), Math.cos(lat)*Math.sin(lon)]; }
+  for(let i=0;i<12;i++){
+    const lon=i/12*TAU, pts=[];
+    for(let j=0;j<=40;j++) pts.push(sphere(-Math.PI/2+j/40*Math.PI, lon));
+    const pl=el('polyline',{fill:'none',stroke:'#63d9ec','stroke-width':'1.05',opacity:'.5'});
+    globeG.appendChild(pl);globeLines.push({e:pl,pts});
+  }
+  for(let i=1;i<=6;i++){
+    const lat=-Math.PI/2+i/7*Math.PI, pts=[];
+    for(let j=0;j<=40;j++) pts.push(sphere(lat, j/40*TAU));
+    const pl=el('polyline',{fill:'none',stroke:'#3d95a6','stroke-width':'1',opacity:'.34'});
+    globeG.appendChild(pl);globeLines.push({e:pl,pts});
+  }
+
+  // ---------- orbits + satellites ----------
+  const orbitG=$('#orbits');
+  const orbitDefs=[[300,74,-18,'#7fe8ff'],[344,92,14,'#4fb6c8'],[262,60,42,'#2f8ea0']];
+  const orbitSats=[];
+  orbitDefs.forEach(([rx,ry,rot,color],i)=>{
+    orbitG.appendChild(el('ellipse',{cx:'640',cy:'360',rx:String(rx),ry:String(ry),fill:'none',stroke:color,'stroke-width':'1',
+      opacity:'.3',transform:'rotate('+rot+' 640 360)'}));
+    const s=el('circle',{cx:'0',cy:'0',r:i===0?'4':'3',fill:'#d9feff'});
+    orbitG.appendChild(s);
+    orbitSats.push({e:s,rx,ry,rot,i});
+  });
+
+  // ---------- data arcs ----------
+  const arcG=$('#arcs'); const arcs=[];
+  const ARC_END=[[1180,158],[1156,236],[1196,560],[1208,470],[1108,116],[1216,330]];
+  const ARC_START=[0.92,-0.55,0.38,-1.05,1.15,-0.18];
+  ARC_END.forEach(([x2,y2],i)=>{
+    const a=ARC_START[i];
+    const sx=CX+Math.cos(a)*R*0.97, sy=CY+Math.sin(a)*R*0.95;
+    const mx=(sx+x2)/2+30, my=(sy+y2)/2-40;
+    const p=el('path',{d:'M '+sx.toFixed(1)+' '+sy.toFixed(1)+' Q '+mx.toFixed(1)+' '+my.toFixed(1)+' '+x2+' '+y2,
+      fill:'none',stroke:'#4fd0e4','stroke-width':'1.1',opacity:'.0'});
+    arcG.appendChild(p);
+    const head=el('circle',{cx:'0',cy:'0',r:'2.6',fill:'#d9feff',opacity:'0'});
+    arcG.appendChild(head);
+    arcs.push({p,head,sx,sy,mx,my,x2,y2,t0:54.2+i*0.5});
+  });
+
+  // ---------- tool traces ----------
+  const ttG=$('#toolTraces'); const traces=[];
+  for(let i=0;i<10;i++){
+    const sx=628, sy=CY+(i-4.5)*26, x2=866, y2=214+i*24;
+    const mx=sx+96, my=sy+(y2-sy)*0.35;
+    const p=el('path',{d:'M '+sx+' '+sy.toFixed(1)+' Q '+mx+' '+my.toFixed(1)+' '+x2+' '+y2,
+      fill:'none',stroke:'#c05038','stroke-width':'1.2','stroke-linecap':'round',opacity:'.85'});
+    ttG.appendChild(p);
+    const head=el('circle',{cx:String(sx),cy:sy.toFixed(1),r:'3',fill:'#ffd9cf'});
+    ttG.appendChild(head);
+    traces.push({p,head,sx,sy,mx,my,x2,y2,t0:66.2+i*0.22});
+  }
+
+  // ---------- tool panel ----------
+  const TOOLS=['bash','read','edit','write','glob','grep','skill','subagent','web_fetch','agent_teams'];
+  const toolG=$('#toolPanel'); const toolRows=[];
+  toolG.appendChild(el('rect',{x:'872',y:'150',width:'312',height:'330',fill:'#000407',opacity:'.84',stroke:'#12414b','stroke-width':'1'}));
+  const toolTitle=el('text',{x:'886',y:'174',fill:'#4f9aa8','font-size':'11','class':'mono'});
+  toolTitle.textContent='▍ 工具接入 · TOOL BRIDGE';
+  toolG.appendChild(toolTitle);
+  const toolCount=el('text',{x:'1168',y:'174',fill:'#7fe8ff','font-size':'10.5','text-anchor':'end','class':'mono'});
+  toolCount.textContent='0 项已注册';
+  toolG.appendChild(toolCount);
+  const TOOL_Y=[214,238,262,286,310,334,358,382,406,430];
+  TOOLS.forEach((name,i)=>{
+    const g=el('g',{opacity:'0'});
+    const tx=el('text',{x:String(1168),y:String(TOOL_Y[i]),fill:'#9adde9','font-size':'10.5','text-anchor':'end','class':'mono'});
+    tx.textContent=name+'  ●';
+    g.appendChild(tx);toolG.appendChild(g);
+    toolRows.push({g,i});
+  });
+  const toolFoot=el('text',{x:'1168',y:'462',fill:'#2f6d79','font-size':'9','text-anchor':'end','class':'mono'});
+  toolFoot.textContent='MCP · openviking 已连接 · 延迟 12 ms';
+  toolG.appendChild(toolFoot);
+
+  // ---------- tunnel ----------
+  const ringG=$('#tunnelRings'); const tRings=[];
+  for(let i=0;i<22;i++){
+    const c=el('circle',{cx:'640',cy:'360',r:'10',fill:'none',stroke:'#6fe3f7','stroke-width':'1',opacity:'0'});
+    c.setAttribute('stroke-dasharray', i%3===0 ? '26 14' : '0');
+    ringG.appendChild(c);tRings.push(c);
+  }
+  const streakG=$('#tunnelStreaks'); const tStreaks=[];
+  for(let i=0;i<52;i++){
+    const a=i/52*TAU;
+    const l=el('line',{x1:'640',y1:'360',x2:'640',y2:'360',stroke:'#bff6ff','stroke-width':'1.2',opacity:'0'});
+    streakG.appendChild(l);
+    tStreaks.push({e:l,a,ph:(i*0.37)%1});
+  }
+
+  // ---------- reasoning sparks ----------
+  const reasonG=$('#reason'); const sparks=[];
+  for(let i=0;i<110;i++){
+    const c=el('circle',{cx:'0',cy:'0',r:i%9===0?'2':'1.2',fill:i%5===0?'#ff5a3c':'#d9feff',opacity:'0'});
+    reasonG.appendChild(c);
+    sparks.push({c,a:(i/110)*TAU,rad:260+((i*53)%420),sp:0.6+((i*17)%9)/9,tx:(i%2?1:-1)*(56+(i*13)%300),ty:-40+((i*29)%220)});
+  }
+
+  // ---------- wordmark ----------
+  const WM=['M207 200 L267 34 L327 200 M231 140 L303 140',
+            'M519.7 56.9 A76 85 0 1 0 519.7 177.1 L519.7 118 L484 118'];
+  const fillWm=(g,stroke,w)=>{WM.forEach(d=>g.appendChild(el('path',{d,fill:'none',stroke,'stroke-width':w})));};
+  fillWm($('#wmWhite'),'#f4ffff',20);
+  $('#wmWhite').appendChild(el('path',{d:'M582 36 L582 198',fill:'none',stroke:'#ff2d2d','stroke-width':26}));
+  fillWm($('#wmRed'),'#ff2d2d',20);
+  fillWm($('#wmCyan'),'#31e6ff',20);
+
+  // ---------- spectrum ----------
+  const specG=$('#spectrum'); const specBars=[];
+  for(let i=0;i<26;i++){
+    const b=el('rect',{x:String(1208-i*9),y:'690',width:'3',height:'2',fill:i%5===0?'#ff3b30':'#7fe8ff',opacity:'.8'});
+    specG.appendChild(b);specBars.push(b);
+  }
+
+  // ---------- status + acts + narration ----------
+  const STATUS=[['插件图','28 / 28 挂载',13.0],['运行时','握手 2.4 ms',24.6],['世界模型','已载入 96%',50.5],
+    ['工具桥','10 项在线',66.8],['上下文','装配 100%',83.0],['推理链','对齐通过',100.6],['智能体','在线',109.0]];
+  const statusG=$('#status'); const statusRows=[];
+  STATUS.forEach(([k,v,t0],i)=>{
+    const g=el('g',{opacity:'0'});
+    const a=el('text',{x:'76',y:String(520+i*22),fill:'#5cb4c4','font-size':'12','class':'mono'});
+    a.textContent='› '+k;
+    const b=el('text',{x:'232',y:String(520+i*22),fill:'#d6fbff','font-size':'12','class':'mono'});
+    b.textContent='';
+    g.appendChild(a);g.appendChild(b);statusG.appendChild(g);
+    statusRows.push({g,b,full:v,t0});
+  });
+
+  const ACTS=[[1.0,'系统冷启动 · COLD BOOT'],[12.2,'内核自检 · KERNEL SELF TEST'],[30.2,'认知网络 · COGNITIVE LATTICE'],
+    [48.2,'世界模型 · WORLD MODEL'],[65.6,'工具桥接 · TOOL BRIDGE'],[81.8,'上下文装配 · CONTEXT ASSEMBLY'],
+    [100.2,'推理链 · REASONING CHAIN'],[109.0,'智能体就位 · ONLINE']];
+
+  const LINES=[[6.0,'冷启动。'],[28.4,'自检，通过。'],[44.0,'认知网络，展开。'],[61.0,'世界模型，载入。'],
+    [78.0,'工具，接入。'],[95.0,'上下文，装配。'],[109.6,'通用人工智能，已就位。'],[115.2,'一切问题，皆有解。']];
+
+  // ---------- render ----------
+
+  function render(t){
+    const outAll=1-ramp(t,118.9,119.92);
+    $('#world').setAttribute('opacity',String(outAll));
+    $('#hud').setAttribute('opacity',String(ramp(t,1.5,2.4)*outAll));
+
+    const cam=1+0.115*easeIO(ramp(t,4,118));
+    const shake = t>108.35 ? 11*Math.exp(-(t-108.35)*4.4)*Math.sin((t-108.35)*48) : 0;
+    $('#world').setAttribute('transform','translate('+(640+shake).toFixed(2)+' '+String(360+shake*0.55)+') scale('+cam.toFixed(4)+') translate(-640 -360)');
+
+    /* ---------- floor + grid ---------- */
+    const floorIn=ramp(t,3.2,5.4), floorOut=1-ramp(t,28,31);
+    $('#floor').setAttribute('opacity',String(0.85*floorIn*floorOut*(1+0.1*Math.sin(t*1.3))));
+    const fineIn=ramp(t,2.8,4.0);
+    $('#gridFine').setAttribute('opacity',String(0.38*fineIn*(0.75+0.25*Math.sin(t*0.8))*(1-ramp(t,30,34))));
+    $('#gridBg').setAttribute('opacity',String(0.44*fineIn*(1-ramp(t,44,48))));
+    $('#hazeC').setAttribute('opacity',String(ramp(t,3.0,6.5)*0.85*(1-ramp(t,108.0,108.4)*0.7)));
+
+    /* ---------- starfield: drift, then warp 70–82 ---------- */
+    bg.setAttribute("opacity",String(0.9*ramp(t,2.0,4.2)));
+    const starOn=ramp(t,2.6,4.6)*(1-ramp(t,81.4,82.0))+0.22*ramp(t,101,103)*(1-ramp(t,118,119));
+    $('#stars').setAttribute('opacity',String(clamp(starOn,0,1)));
+    const warp = t>70 ? Math.pow(t-70,2)*3.4 : 0;
+    stars.forEach((s)=>{
+      let z=1300-(((s.z+ t*34 + warp) % 1300)+1300)%1300;
+      if(z<40) z=40;
+      const k=520/z;
+      s.c.setAttribute('cx',String(CX+s.x*k));
+      s.c.setAttribute('cy',String(CY+s.y*k));
+      s.c.setAttribute('r',String(clamp(0.5+k*1.4,0.4,3.2)));
+      s.c.setAttribute('opacity',String(clamp((1-z/1300)*0.75,0,1)));
+    });
+
+    /* ---------- seed ---------- */
+    const seedIn=ramp(t,0.55,1.35), seedOut=1-ramp(t,11.4,12.2);
+    const pulse=1+0.4*Math.sin(t*3.0);
+    $('#seed').setAttribute('opacity',String(seedIn*seedOut*(0.85+0.15*Math.sin(t*5.3))));
+    $('#seed').setAttribute('r',String(2.4+3.4*pulse*(1-ramp(t,5.0,7.0)*0.3)));
+    $('#seedGlow').setAttribute('opacity',String(0.8*seedIn*seedOut));
+    $('#seedGlow').setAttribute('r',String(86+54*pulse));
+
+    /* ---------- boot dump ---------- */
+    const dumpIn=ramp(t,2.2,2.9), dumpOut=1-ramp(t,7.1,7.9);
+    $('#bootDump').setAttribute('opacity',String(dumpIn*dumpOut));
+    dumpLines.forEach((l,i)=>{
+      const p=ramp(t,l.t0,l.t0+0.34);
+      l.tx.textContent=p>0?l.full.slice(0,Math.max(1,Math.ceil(l.full.length*p))):'';
+    });
+
+    /* ---------- self test ---------- */
+    const stIn=ramp(t,7.6,8.0), stOut=1-ramp(t,12.3,13.0);
+    $('#selfTest').setAttribute('opacity',String(stIn*stOut));
+    testRows.forEach((l)=>{
+      const p=ramp(t,l.t0,l.t0+0.3);
+      l.g.setAttribute('opacity',String(p));
+      l.b.textContent=p>0?l.full.slice(0,Math.max(1,Math.ceil(l.full.length*p))):'';
+    });
+
+    /* ---------- anomaly beat ---------- */
+    const warnOn=ramp(t,9.3,9.5)*(1-ramp(t,11.2,11.5));
+    const flick=0.55+0.45*Math.abs(Math.sin(t*13));
+    $('#warn').setAttribute('opacity',String(warnOn*flick));
+    if(warnOn>0){
+      const pct=(0.07+0.02*Math.sin(t*2.4)).toFixed(2);
+      $('#warnTx').textContent='ANOMALY · 自检偏差 '+pct+'% — ECC 已校正';
+    }
+
+    /* ---------- ring scanner ---------- */
+    const rsIn=ramp(t,5.0,5.6), rsOut=1-ramp(t,12.0,12.8);
+    $('#ringScan').setAttribute('opacity',String(rsIn*rsOut));
+    $('#scanArc').setAttribute('stroke-dasharray','168 900');
+    $('#scanArc').setAttribute('transform','rotate('+String(t*58)+' 640 360)');
+    $('#scanArc').setAttribute('stroke-width',String(1.2+0.7*Math.sin(t*4.2)));
+    const ph=((t-5.2)/2.6)%1;
+    const on=rsIn*(1-ramp(t,11.2,11.8));
+    $('#scanBar').setAttribute('y',String(CY-190+380*clamp(ph*1.5,0,1)));
+    $('#scanBar').setAttribute('opacity',String(0.5*on*(ph<0.62?1:0)));
+    $('#scanBarTrail').setAttribute('y',String(CY-214+380*clamp(ph*1.5,0,1)));
+    $('#scanBarTrail').setAttribute('opacity',String(on*(ph<0.62?1:0)));
+
+    /* ---------- plugin panel ---------- */
+    const panIn=ramp(t,12.3,12.9), panOut=1-ramp(t,28.4,29.2);
+    $('#plugPanel').setAttribute('opacity',String(panIn*panOut));
+    plugRows.forEach((o)=>{ o.g.setAttribute('opacity',String(ramp(t,12.5+o.i*0.11,12.7+o.i*0.11))); });
+    plugCount.textContent=clamp(Math.floor((t-12.5)/0.11),0,28)+' / 28';
+    plugFoot.setAttribute('opacity',String(ramp(t,16.6,17.2)*panOut*0.9));
+
+    /* ---------- cognitive lattice ---------- */
+    const latIn=ramp(t,29.3,30.3), latOut=1-ramp(t,47.0,48.1);
+    const latA=latIn*latOut;
+    $('#lattice').setAttribute('opacity',String(latA));
+    if(latA>0.002){
+      const ry=0.30+(t-29)*0.30, rx=0.20+0.07*Math.sin(t*0.23);
+      const cy=Math.cos(ry), sy=Math.sin(ry), cx2=Math.cos(rx), sx2=Math.sin(rx);
+      const rad=232*(0.9+0.1*easeOut(latIn));
+      const proj=(p)=>{
+        const x1=p[0]*cy+p[2]*sy, z1=-p[0]*sy+p[2]*cy;
+        const y1=p[1]*cx2-z1*sx2, z2=p[1]*sx2+z1*cx2;
+        const per=1/(1.55-0.42*z2);
+        return [CX+x1*rad*per, CY+y1*rad*per*0.9, z2];
+      };
+      const cache=[];
+      latPts.forEach((p,i)=>{
+        const v=proj(p); cache[i]=v;
+        const e=latNodes[i].e, a=(v[2]+1)/2;
+        e.setAttribute('cx',String(v[0].toFixed(1)));
+        e.setAttribute('cy',String(v[1].toFixed(1)));
+        e.setAttribute('opacity',String(clamp(a*1.4,0.05,1)));
+        e.setAttribute('r',String((i%7===0?3.4:2.2)*(0.65+0.55*a)));
+      });
+      latEdges.forEach((o)=>{
+        const a=cache[o.i], b=cache[o.j];
+        if(a===undefined||b===undefined) return;
+        o.e.setAttribute('x1',String(a[0].toFixed(1)));
+        o.e.setAttribute('y1',String(a[1].toFixed(1)));
+        o.e.setAttribute('x2',String(b[0].toFixed(1)));
+        o.e.setAttribute('y2',String(b[1].toFixed(1)));
+        o.e.setAttribute('opacity',String(clamp(((a[2]+b[2])/2+1)*0.34,0.03,0.6)));
+      });
+    }
+
+    /* ---------- world model: 3D globe ---------- */
+    const glIn=ramp(t,47.3,48.6), glOut=1-ramp(t,80.2,81.6);
+    $('#globe').setAttribute('opacity',String(glIn*glOut*(1-0.22*ramp(t,65.6,67.6))));
+    if(glIn*glOut>0.002){
+      const ry=0.35+(t-47)*0.24, rx=0.30+0.03*Math.sin(t*0.3);
+      const cy=Math.cos(ry), sy=Math.sin(ry), cx2=Math.cos(rx), sx2=Math.sin(rx);
+      globeLines.forEach((o)=>{
+        const pts=[];
+        for(let k=0;k<o.pts.length;k++){
+          const p=o.pts[k];
+          const x1=p[0]*cy+p[2]*sy, z1=-p[0]*sy+p[2]*cy;
+          const y1=p[1]*cx2-z1*sx2;
+          pts.push((CX+x1*R).toFixed(1)+','+(CY+y1*R).toFixed(1));
+        }
+        o.e.setAttribute('points',pts.join(' '));
+      });
+      const lx=-172*easeIO(ramp(t,65.6,67.6))*(1-easeIO(ramp(t,80.2,81.6)));
+      const gs=(0.94+0.06*easeOut(glIn))*(1-0.20*ramp(t,65.8,67.6));
+      $('#globe').setAttribute('transform','translate(640 360) translate('+lx.toFixed(1)+' 0) scale('+gs.toFixed(3)+') translate(-640 -360)');
+      $('#globeOuter').setAttribute('opacity',String(0.7*(0.85+0.15*Math.sin(t*2.6))));
+    }
+
+    /* ---------- orbits ---------- */
+    const orbIn=ramp(t,50.2,51.8), orbOut=1-ramp(t,64.4,65.4);
+    $('#orbits').setAttribute('opacity',String(orbIn*orbOut));
+    orbitSats.forEach((o)=>{
+      const a=t*0.55+o.i*2.2;
+      const ex=Math.cos(a)*o.rx, ey=Math.sin(a)*o.ry;
+      const rr=o.rot*Math.PI/180;
+      o.e.setAttribute('cx',String(CX+ex*Math.cos(rr)-ey*Math.sin(rr)));
+      o.e.setAttribute('cy',String(CY+ex*Math.sin(rr)+ey*Math.cos(rr)));
+      o.e.setAttribute('opacity',String(0.55+0.45*Math.sin(a)));
+    });
+
+    /* ---------- data arcs ---------- */
+    const arcIn=ramp(t,53.6,54.4), arcOut=1-ramp(t,64.0,65.2);
+    $('#arcs').setAttribute('opacity',String(arcIn*arcOut));
+    arcs.forEach((o)=>{
+      const p=easeIO(ramp(t,o.t0,o.t0+1.7));
+      o.p.setAttribute('stroke-dasharray','900');
+      o.p.setAttribute('stroke-dashoffset',String(900*(1-p)));
+      o.p.setAttribute('opacity',String(p>0.02?0.85:0));
+      const u=1-p;
+      const bx=u*u*o.sx+2*u*p*o.mx+p*p*o.x2;
+      const by=u*u*o.sy+2*u*p*o.my+p*p*o.y2;
+      o.head.setAttribute('cx',String(bx.toFixed(1)));
+      o.head.setAttribute('cy',String(by.toFixed(1)));
+      o.head.setAttribute('opacity',String(p>0.02&&p<0.985?1:0));
+    });
+
+    /* ---------- tool bridge ---------- */
+    const ttIn=ramp(t,66.4,66.9), ttOut=1-ramp(t,80.2,81.4);
+    $('#toolTraces').setAttribute('opacity',String(ttIn*ttOut));
+    traces.forEach((o)=>{
+      const p=easeIO(ramp(t,o.t0,o.t0+1.0));
+      o.p.setAttribute('stroke-dasharray','500');
+      o.p.setAttribute('stroke-dashoffset',String(500*(1-p)));
+      o.p.setAttribute('opacity',String(p>0.02?0.85:0));
+      const u=1-p;
+      const bx=u*u*o.sx+2*u*p*o.mx+p*p*o.x2;
+      const by=u*u*o.sy+2*u*p*o.my+p*p*o.y2;
+      o.head.setAttribute('cx',String(bx.toFixed(1)));
+      o.head.setAttribute('cy',String(by.toFixed(1)));
+      o.head.setAttribute('opacity',String(p>0.02?1:0));
+    });
+    const toolIn=ramp(t,66.2,66.7), toolOut=1-ramp(t,80.2,81.4);
+    $('#toolPanel').setAttribute('opacity',String(toolIn*toolOut));
+    toolRows.forEach((o)=>{ o.g.setAttribute('opacity',String(ramp(t,66.5+o.i*0.28,66.7+o.i*0.28))); });
+    toolCount.textContent=clamp(Math.floor((t-66.5)/0.28),0,10)+' 项已注册';
+    toolFoot.setAttribute('opacity',String(ramp(t,79.0,79.5)*toolOut*0.9));
+
+    /* ---------- context assembly: tunnel ---------- */
+    const tuIn=ramp(t,81.8,83.0), tuOut=1-ramp(t,98.6,100.0);
+    const tuA=tuIn*tuOut;
+    $('#tunnel').setAttribute('opacity',String(tuA));
+    if(tuA>0.002){
+      tRings.forEach((c,i)=>{
+        const z=((t-81.8)*0.30+i/22)%1;
+        const r=18+600*Math.pow(z,1.9);
+        c.setAttribute('r',String(r.toFixed(1)));
+        c.setAttribute('opacity',String((1-z)*0.62));
+        c.setAttribute('stroke-width',String(0.5+2.2*(1-z)));
+        c.setAttribute('transform','rotate('+String((t*22+i*17)%360)+' 640 360) translate(640 360) scale(1 0.62) translate(-640 -360)');
+      });
+      tStreaks.forEach((s)=>{
+        const z=((t-81.8)*0.62+s.ph)%1;
+        const r0=30+560*z, len=20+90*z;
+        s.e.setAttribute('x1',String(CX+Math.cos(s.a)*r0));
+        s.e.setAttribute('y1',String(CY+Math.sin(s.a)*r0));
+        s.e.setAttribute('x2',String(CX+Math.cos(s.a)*(r0+len)));
+        s.e.setAttribute('y2',String(CY+Math.sin(s.a)*(r0+len)));
+        s.e.setAttribute('opacity',String((1-z)*0.5));
+      });
+      $('#tunnelCore').setAttribute('r',String(84+14*Math.sin(t*6)));
+      $('#tunnelCore').setAttribute('opacity',String(0.75+0.2*Math.sin(t*9)));
+    }
+
+    /* ---------- reasoning chain ---------- */
+    const reIn=ramp(t,100.1,100.9), reOut=1-ramp(t,108.1,108.4);
+    $('#reason').setAttribute('opacity',String(reIn*reOut));
+    if(reIn*reOut>0.002){
+      const q0=easeIO(ramp(t,100.4,106.6));
+      sparks.forEach((s,i)=>{
+        const a=s.a+t*s.sp*0.5;
+        const r=s.rad*(1-q0*0.92);
+        const x0=CX+Math.cos(a)*r, y0=CY+Math.sin(a)*r*0.8;
+        const x1=640+s.tx, y1=380+s.ty;
+        s.c.setAttribute('cx',String(x0+(x1-x0)*q0));
+        s.c.setAttribute('cy',String(y0+(y1-y0)*q0));
+        s.c.setAttribute('opacity',String((0.25+0.6*Math.abs(Math.sin(t*2.2+i)))*(q0<0.99?1:0)));
+      });
+    }
+
+    /* ---------- HUD ---------- */
+    const mm=Math.floor(t/60), ss=Math.floor(t%60);
+    $('#clock').textContent='T+00:'+String(mm).padStart(2,'0')+':'+String(ss).padStart(2,'0');
+    $('#telL').textContent='CH 07 · '+(57+Math.round(4*Math.abs(Math.sin(t*0.7))))+' FPS · 44.1 kHz';
+    specBars.forEach((b,i)=>{
+      const h=2+36*Math.abs(Math.sin(t*2.6+i*0.55)*Math.sin(t*1.1+i*0.19));
+      b.setAttribute('y',String(688-h));
+      b.setAttribute('height',String(h));
+    });
+    const barT=ramp(t,1.4,118.2);
+    $('#bar').setAttribute('opacity',String(ramp(t,1.4,2.2)*(1-ramp(t,118.6,119.3))));
+    $('#bar').setAttribute('width',String(1152*barT));
+
+    let label='';
+    for(const [t0,s] of ACTS){ if(t>=t0) label=s; }
+    const last=ACTS.filter(([t0])=>t>=t0).pop();
+    const lp=last?ramp(t,last[0],last[0]+0.8):0;
+    $('#actLabel').textContent=label.slice(0,Math.max(0,Math.ceil(label.length*lp)));
+    $('#actLabel').setAttribute('opacity',String(0.9*ramp(t,1.8,2.6)));
+
+    statusRows.forEach((l)=>{
+      const p=ramp(t,l.t0,l.t0+0.32);
+      l.g.setAttribute('opacity',String(p));
+      l.b.textContent=p>0?l.full.slice(0,Math.max(1,Math.ceil(l.full.length*p))):'';
+    });
+
+    /* ---------- narration captions ---------- */
+    let cap='', capA=0;
+    for(const [t0,s] of LINES){
+      if(t>=t0 && t<108.2){
+        cap=s;
+        capA=ramp(t,t0,t0+0.4)*(1-ramp(t,t0+2.3,t0+3.0));
+      }
+    }
+    const capEl=$('#caption');
+    capEl.textContent=cap;
+    capEl.setAttribute('opacity',String(0.85*capA));
+
+    /* ---------- impact + wordmark ---------- */
+    const blackOn=ramp(t,107.4,107.9)*(1-ramp(t,108.28,108.36));
+    $('#blackout').setAttribute('opacity',String(blackOn*0.88));
+    const flash=t<108.34?0:Math.max(0,0.9*(1-ramp(t,108.34,108.78))-0.35*ramp(t,108.78,109.3));
+    $('#flash').setAttribute('opacity',String(flash));
+    $('#scanlines').setAttribute('opacity',String(t<108.34?0:0.9*(1-ramp(t,108.34,109.6))));
+
+    const wmIn=ramp(t,108.36,108.62);
+    $('#wordmark').setAttribute('opacity',String(wmIn*(1-ramp(t,119.1,119.9))));
+    const conv=1-easeOut(ramp(t,108.36,109.3));
+    const pop=easeBack(clamp(ramp(t,108.36,109.0),0,1));
+    const scale=0.55+0.72*pop;
+    const TX=640-402.5*scale, TY=352-117*scale;
+    const base='translate('+TX.toFixed(2)+' '+TY.toFixed(2)+') scale('+scale.toFixed(3)+')';
+    $('#wmWhite').setAttribute('transform',base);
+    $('#wmRed').setAttribute('transform','translate('+String((TX+18*conv).toFixed(2))+' '+String((TY+7*conv).toFixed(2))+') scale('+scale.toFixed(3)+')');
+    $('#wmCyan').setAttribute('transform','translate('+String((TX-18*conv).toFixed(2))+' '+String((TY-7*conv).toFixed(2))+') scale('+scale.toFixed(3)+')');
+    $('#wmRed').setAttribute('opacity',String(0.02+0.6*conv));
+    $('#wmCyan').setAttribute('opacity',String(0.02+0.55*conv));
+
+    const st=ramp(t,108.4,109.3);
+    $('#streakBar').setAttribute('opacity',String(st>0&&st<1?0.85*(1-Math.abs(st-0.5)*1.3):0));
+    $('#streakBar').setAttribute('x',String(-600+st*1900));
+
+    const shockP=ramp(t,108.34,109.4);
+    $('#shock').setAttribute('r',String(820*easeOut(shockP)));
+    $('#shock').setAttribute('opacity',String(0.8*(1-shockP)));
+    $('#shock').setAttribute('stroke-width',String(0.6+2.4*(1-shockP)));
+
+    const cap1=$('#cap1'), cap2=$('#cap2'), cap3=$('#cap3');
+    cap1.setAttribute('opacity',String(ramp(t,109.6,110.2)));
+    cap1.setAttribute('y',String(540+12*(1-easeOut(ramp(t,109.6,110.2)))));
+    cap2.setAttribute('opacity',String(ramp(t,111.3,111.9)));
+    cap2.setAttribute('y',String(572+10*(1-easeOut(ramp(t,111.3,111.9)))));
+    cap3.setAttribute('opacity',String(ramp(t,114.0,114.7)));
+    cap3.setAttribute('y',String(614+8*(1-easeOut(ramp(t,114.0,114.7)))));
+
+    const br=1+0.006*Math.sin((t-110)*1.3);
+    if(t>110){ $('#wordmark').setAttribute('transform','translate(640 360) scale('+br.toFixed(4)+') translate(-640 -360)'); }
+
+    /* ---------- handover ---------- */
+    const gate=ramp(t,118.2,118.9);
+    const gateW=1280*easeIO(gate);
+    $('#gateLine').setAttribute('x',String((640-gateW/2).toFixed(1)));
+    $('#gateLine').setAttribute('width',String(gateW.toFixed(1)));
+    $('#gateLine').setAttribute('opacity',String(gate>0?0.9*(1-ramp(t,119.0,119.7)):0));
+  }
+
+  const freeze=new URLSearchParams(location.search).get('t');
+  if(freeze!==null && freeze!==''){ render(parseFloat(freeze)); }
+  else {
+    const t0=performance.now();
+    const loop=(now)=>{ const t=(now-t0)/1000; render(t); if(t<120.4) requestAnimationFrame(loop); };
+    requestAnimationFrame(loop);
+    try{ const a=document.getElementById('au'); if(a){ a.volume=0.9; a.play().catch(()=>{}); } }catch(e){}
+    addEventListener('pointerdown',()=>{ const a=document.getElementById('au'); if(a&&a.paused) a.play().catch(()=>{}); },{once:true});
+  }
+  window.__render=render;
+})();
+</script>
+<audio id="au" src="audio/agi-boot-120.mp3" preload="auto"></audio>
+</body></html>

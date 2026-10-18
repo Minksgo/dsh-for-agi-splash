@@ -45,8 +45,8 @@ window.__ModuleLoader__.load({
 		#boot{position:absolute;inset:0;background:#000407}
 		.agi-cut{position:absolute;inset:0;display:none}
 		.agi-cut.on{display:block}
-		#agiScene,#agiScene30{position:absolute;inset:0;width:100%;height:100%;display:block}
-		#agiScene text,#agiScene30 text{font-family:"PingFang SC","SF Mono",Menlo,Monaco,Consolas,monospace}
+		#agiScene,#agiScene30,#agiScene120{position:absolute;inset:0;width:100%;height:100%;display:block}
+		#agiScene text,#agiScene30 text,#agiScene120 text{font-family:"PingFang SC","SF Mono",Menlo,Monaco,Consolas,monospace}
 		#agiAudio{display:none}
 		.agi-skip{position:absolute;left:0;right:0;bottom:10px;text-align:center;font:10px/1.6 "PingFang SC","SF Mono",monospace;letter-spacing:.22em;color:#3f8493;opacity:.55;pointer-events:none}
 		`;
@@ -64,20 +64,20 @@ window.__ModuleLoader__.load({
 		const DEFAULT_HINT = '点击任意处跳过 · ESC';
 		const FADE_MS = 700;
 
-		/** 'auto' 装完或升级后播一次剧场版；'long' 每次 30 s；'short' 每次 9.9 s。 */
+		/** 'auto' 装完或升级后播一次剧场版；'cinema' 每次 120 s；'long' 每次 30 s；'short' 每次 9.9 s。 */
 		function readMode() {
 			try {
 				const raw = window.localStorage.getItem(CFG + 'mode');
-				if (raw === 'long' || raw === 'short') return raw;
+				if (raw === 'cinema' || raw === 'long' || raw === 'short') return raw;
 			} catch (error) {}
 			return 'auto';
 		}
 
 		/** auto 模式下判断：本机第一次打开、或版本变了 → 剧场版。 */
 		function pickCut(force) {
-			if (force === 'long' || force === 'short') return force;
+			if (force === 'cinema' || force === 'long' || force === 'short') return force;
 			const mode = readMode();
-			if (mode === 'long' || mode === 'short') return mode;
+			if (mode === 'cinema' || mode === 'long' || mode === 'short') return mode;
 			try {
 				return window.localStorage.getItem(CFG + 'version') === PLUGIN_VERSION ? 'short' : 'long';
 			} catch (error) {
@@ -220,7 +220,7 @@ window.__ModuleLoader__.load({
 		 */
 		function mount(force) {
 			if (host !== null) return host;
-			const explicit = force === 'long' || force === 'short' ? force : null;
+			const explicit = force === 'cinema' || force === 'long' || force === 'short' ? force : null;
 			if (explicit === null && force !== true && readOff()) {
 				releaseCover();
 				return null;
@@ -273,7 +273,7 @@ window.__ModuleLoader__.load({
 			cancelled = false;
 			clearTimers();
 			removeKeyListener();
-			mount(cut === 'long' || cut === 'short' ? cut : true);
+			mount(cut === 'cinema' || cut === 'long' || cut === 'short' ? cut : true);
 		}
 
 		/* 模块求值即上屏：比 apply() 早，比 DSH 的启动卡片晚不了多少。 */
@@ -393,12 +393,12 @@ window.__ModuleLoader__.load({
 				} catch (error) {
 					/* 上屏失败也不能把设置页带崩 */
 				}
-				window.setTimeout(() => setPlaying(false), cut === 'long' ? 31200 : 10400);
+				window.setTimeout(() => setPlaying(false), cut === 'cinema' ? 121200 : cut === 'long' ? 31200 : 10400);
 			};
 
 			const openPreview = (cut) => {
 				try {
-					const path = cut === 'long' ? '/dsh-for-agi-splash/preview/30' : '/dsh-for-agi-splash/preview';
+					const path = cut === 'cinema' ? '/dsh-for-agi-splash/preview/120' : cut === 'long' ? '/dsh-for-agi-splash/preview/30' : '/dsh-for-agi-splash/preview';
 					window.open(location.origin + path, '_blank', 'noopener');
 				} catch (error) {}
 			};
@@ -425,7 +425,7 @@ window.__ModuleLoader__.load({
 					React.createElement(
 						'div',
 						{ style: UI.desc },
-						'两套片头：9.9 秒精简版五幕启动链，和 30 秒剧场版（冷启动 → 自检 → 认知网络 → 工具桥接 → 上下文装配 → AGI 就位 → 交棒）。都有中文旁白与全片音效，随时点击跳过。配置仅存于本机浏览器，换机器不跟随。',
+						'三套片头：9.9 秒精简版五幕启动链；30 秒剧场版；120 秒电影版（冷启动 → 自检 → 认知网络 → 世界模型 → 工具桥接 → 上下文装配 → 推理链 → AGI 就位）。都有中文旁白与全片音效，随时点击跳过。配置仅存于本机浏览器，换机器不跟随。',
 					),
 				),
 				React.createElement(
@@ -447,12 +447,13 @@ window.__ModuleLoader__.load({
 						Row,
 						{
 							title: '播放模式',
-							desc: '自动：装完或升级后的第一次启动播 30 秒剧场版，之后每次 9.9 秒；也可以固定其中一版。',
+							desc: '自动：装完或升级后的第一次启动播 30 秒剧场版，之后每次 9.9 秒；也可以固定 120 秒电影版或其中一版。',
 						},
 						React.createElement(
 							'div',
 							{ style: { display: 'flex', gap: '6px', flex: '0 0 auto' } },
 							modeButton('auto', '自动'),
+							modeButton('cinema', '每次电影版'),
 							modeButton('long', '每次剧场版'),
 							modeButton('short', '每次精简版'),
 						),
@@ -503,6 +504,11 @@ window.__ModuleLoader__.load({
 								{ type: 'button', onClick: () => openPreview('long'), style: UI.button(false) },
 								'预览剧场版',
 							),
+							React.createElement(
+								'button',
+								{ type: 'button', onClick: () => openPreview('cinema'), style: UI.button(false) },
+								'预览电影版',
+							),
 						),
 					),
 					React.createElement(
@@ -530,6 +536,16 @@ window.__ModuleLoader__.load({
 									style: Object.assign(UI.button(true), playing ? { opacity: 0.6, cursor: 'default' } : null),
 								},
 								playing ? '播放中…' : '重播剧场版',
+							),
+							React.createElement(
+								'button',
+								{
+									type: 'button',
+									onClick: () => startReplay('cinema'),
+									disabled: playing,
+									style: Object.assign(UI.button(false), playing ? { opacity: 0.6, cursor: 'default' } : null),
+								},
+								'重播电影版',
 							),
 						),
 					),
